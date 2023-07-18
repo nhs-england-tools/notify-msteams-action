@@ -1,4 +1,4 @@
-# Notify MSTeams
+# Notify MSTeams Action
 
 This GitHub action is designed to enable development teams to easily send notifications to an MS Teams channel from their build pipelines.
 
@@ -6,7 +6,7 @@ This action uses typescript and is built from the [typescript-action](https://gi
 
 ## Table of Contents
 
-- [Notify MS Teams](#notify-msteams)
+- [Notify MS Teams](#notify-msteams-action)
   - [Table of Contents](#table-of-contents)
   - [Installation](#installation)
     - [Prerequisites](#prerequisites)
@@ -25,7 +25,7 @@ Add the following section to your existing workflow file:
 
 ```yml
       - name: Testing action to notify Teams
-        uses: nhs-england-tools/notify-msteams@v0.0.1
+        uses: nhs-england-tools/notify-msteams-action@v0.0.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}

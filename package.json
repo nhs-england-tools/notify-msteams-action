@@ -1,5 +1,5 @@
 {
-    "name": "notify-msteams",
+    "name": "notify-msteams-action",
     "version": "0.0.1",
     "private": true,
     "description": "GitHub Action to notify an MS Teams channel",
