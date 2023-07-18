@@ -1,0 +1,23 @@
+name: 'Notify MS Teams'
+description: 'GitHub Action to notify an MS Teams channel'
+author: 'Chris Walters'
+inputs:
+  github-token:
+    required: true
+    description: 'GitHub token'
+  teams-webhook-url:
+    required: true
+    description: 'URL for the incoming webhook in your target channel'
+  message-title:
+    required: true
+    description: 'The title for the message'
+    default: 'GitHub Action Notification'
+  message-text:
+    required: true
+    description: 'The content of the message to be displayed'
+  message-colour:
+    required: false
+    description: 'The colour to use for the header line in the notification'
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
