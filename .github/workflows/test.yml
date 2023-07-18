@@ -18,7 +18,7 @@ jobs:
 
       - uses: ./
         with:
-          github-token: ${{ github.token }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
           message-title: Title
           message-text: Text
