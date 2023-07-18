@@ -1,4 +1,4 @@
-# notify MSTeams
+# Notify MSTeams
 
 This GitHub action is designed to enable development teams to easily send notifications to an MS Teams channel from their build pipelines.
 
@@ -6,14 +6,13 @@ This action uses typescript and is built from the [typescript-action](https://gi
 
 ## Table of Contents
 
-- [Notify MS Teams](#notify-teams)
+- [Notify MS Teams](#notify-msteams)
   - [Table of Contents](#table-of-contents)
   - [Installation](#installation)
     - [Prerequisites](#prerequisites)
   - [Usage](#usage)
   - [Architecture](#architecture)
     - [Diagrams](#diagrams)
-    - [Configuration](#configuration)
   - [Contributing](#contributing)
   - [Contacts](#contacts)
   - [Licence](#licence)
@@ -23,6 +22,7 @@ This action uses typescript and is built from the [typescript-action](https://gi
 This action can be called as part of your [GitHub action](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions) workflows. to achieve this follow these steps:
 
 Add the following section to your existing workflow file:
+
 ```yml
       - name: Testing action to notify Teams
         uses: nhs-england-tools/notify-msteams@v0.0.1
@@ -56,7 +56,6 @@ Install and configure toolchain dependencies
 make config
 ```
 
-
 ### Prerequisites
 
 The following software packages or their equivalents are expected to be installed
@@ -80,8 +79,6 @@ The steps above detail how to quickly use this action within your repository. Th
 The [C4 model](https://c4model.com/) is a simple and intuitive way to create software architecture diagrams that are clear, consistent, scalable and most importantly collaborative. This should result in documenting all the system interfaces, external dependencies and integration points.
 
 ![Repository Template](./docs/diagrams/Repository_Template_GitHub_Generic.png)
-
-
 
 ## Contributing
 
