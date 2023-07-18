@@ -32,20 +32,3 @@ test('test building a message card', async () => {
   const messageJson = JSON.parse(message)
   expect(messageJson.summary).toBe(messageTitle)
 })
-
-// shows how the runner will run a javascript action with env / stdout protocol
-/*
-test('test runs', () => {
-  process.env['INPUT_GITHUB-TOKEN'] = 'sometoken'
-  process.env['INPUT_TEAMS-WEBHOOK-URL'] = 'https://google.com'
-  process.env['INPUT_MESSAGE-TITLE'] = 'This is a title'
-  process.env['INPUT_MESSAGE-TEXT'] = 'This is some text'
-  process.env['INPUT_MESSAGE-COLOUR'] = 'HEXCOL'
-  const np = process.execPath
-  const ip = path.join(__dirname, '..', 'lib', 'main.js')
-  const options: cp.ExecFileSyncOptions = {
-    env: process.env
-  }
-  console.log(cp.execFileSync(np, [ip], options).toString())
-})
-*/
