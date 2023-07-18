@@ -7,13 +7,16 @@ install: # Install project dependencies
 	npm install
 
 build: # Build project
-	npm run build && npm run package
+	npm run build
+	npm run package
 
 test: # Run tests
 	npm test
 
 config: # Configure development environment
 	make \
+		asdf-install \
+		githooks-install \
 		nodejs-install
 
 .SILENT: \
