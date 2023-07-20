@@ -7,8 +7,7 @@ install: # Install project dependencies
 	npm install
 
 build: # Build project
-	npm run build
-	npm run package
+	npm run all
 
 test: # Run tests
 	npm test

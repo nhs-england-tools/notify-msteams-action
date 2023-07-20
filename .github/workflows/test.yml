@@ -12,9 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          npm install
+          make install
       - run: |
-          npm run all
+          make build
 
       - uses: ./
         with:
