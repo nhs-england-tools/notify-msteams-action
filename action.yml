@@ -18,6 +18,9 @@ inputs:
   message-colour:
     required: false
     description: 'The colour to use for the header line in the notification'
+  link:
+    required: false
+    description: 'A link to include in the message'
 runs:
   using: 'node16'
   main: 'dist/index.js'
