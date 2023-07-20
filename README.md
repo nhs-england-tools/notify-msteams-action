@@ -25,7 +25,7 @@ Add the following section to your existing workflow file:
 
 ```yml
       - name: Testing action to notify Teams
-        uses: nhs-england-tools/notify-msteams-action@v0.0.2
+        uses: nhs-england-tools/notify-msteams-action@v0.0.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
