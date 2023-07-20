@@ -21,4 +21,4 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
           message-title: Title
-          message-text: Text
+          message-text: "Text into '${{ github.event.pull_request.base.ref }}'"
