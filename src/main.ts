@@ -12,6 +12,7 @@ async function run(): Promise<void> {
     const messageBody = core.getInput('message-text', {required: true})
     const messageColour =
       core.getInput('message-colour', {required: false}) || '00cbff'
+    const link = core.getInput('link', {required: false}) || ''
 
     const [owner, repoName] = (process.env.GITHUB_REPOSITORY || '').split('/') // https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
     const sha = process.env.GITHUB_SHA || ''
@@ -46,7 +47,8 @@ async function run(): Promise<void> {
       repoBranch,
       avatar_url,
       login,
-      author_url
+      author_url,
+      link
     )
 
     const response = await axios.post(teamsWebhookUrl, messageCard, {

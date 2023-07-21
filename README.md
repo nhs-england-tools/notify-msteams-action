@@ -25,12 +25,13 @@ Add the following section to your existing workflow file:
 
 ```yml
       - name: Testing action to notify Teams
-        uses: nhs-england-tools/notify-msteams-action@v0.0.2
+        uses: nhs-england-tools/notify-msteams-action@v0.0.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
           message-title: "Replace with an appropriate title"
           message-text: "Replace with appropriate text"
+          link: https://google.com
 ```
 
 Follow the instructions [to add an Incoming Webhook](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet) to the Teams channel of your choice.
@@ -71,6 +72,7 @@ The steps above detail how to quickly use this action within your repository. Th
 - message-title - the title for your message - this will be displayed in the notification
 - message-text - the text for your message - this will be displayed in the notification
 - message-colour - The colour to use for the header line in the notification
+- link - optional if required provide a link to be presented in the notification
 
 ## Architecture
 
