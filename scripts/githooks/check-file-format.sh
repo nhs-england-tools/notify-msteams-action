@@ -41,7 +41,8 @@ function main() {
       --volume=$PWD:/check \
       mstruebing/editorconfig-checker:$image_version \
         ec \
-          --exclude '.git/'
+          --exclude '.git/' \
+          --exclude 'dist/'
 
   else
 
@@ -54,6 +55,7 @@ function main() {
           mstruebing/editorconfig-checker:$image_version \
             ec \
               --exclude '.git/' \
+              --exclude 'dist/' \
               "$file"
         [ $? != 0 ] && exit_code=1 ||:
       done < <(echo "$files")
