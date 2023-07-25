@@ -74,6 +74,10 @@ The steps above detail how to quickly use this action within your repository. Th
 - message-colour - The colour to use for the header line in the notification
 - link - optional if required provide a link to be presented in the notification
 
+An example of how the notification could appear in Microsoft Teams is provided:
+
+![Microsoft Teams notification showing the adaptive card being displayed to the user for a "Pull request opened" event](docs/images/msteams-action-notification.png)
+
 ## Architecture
 
 ### Diagrams
