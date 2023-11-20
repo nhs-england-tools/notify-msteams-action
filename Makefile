@@ -1,25 +1,37 @@
-include ./scripts/init.mk
+# This file is for you! Edit it to implement your own hooks (make targets) into
+# the project as automated steps to be executed on locally and in the CD pipeline.
 
-# This file contains hooks into the project configuration, test and build cycle
-# as automated steps to be executed on a workstation and in the CI/CD pipeline.
+include scripts/init.mk
 
-install: # Install project dependencies
-	npm install
+# ==============================================================================
 
-build: # Build project
-	npm run all
+# Example CI/CD targets are: dependencies, build, publish, deploy, clean, etc.
 
-test: # Run tests
-	npm test
+dependencies: # Install dependencies needed to build and test the project @Pipeline
+	# TODO: Implement installation of your project dependencies
 
-config: # Configure development environment
+build: # Build the project artefact @Pipeline
+	# TODO: Implement the artefact build step
+
+publish: # Publish the project artefact @Pipeline
+	# TODO: Implement the artefact publishing step
+
+deploy: # Deploy the project artefact to the target environment @Pipeline
+	# TODO: Implement the artefact deployment step
+
+clean:: # Clean-up project resources (main) @Operations
+	# TODO: Implement project resources clean-up step
+
+config:: # Configure development environment (main) @Configuration
+	# TODO: Use only 'make' targets that are specific to this project, e.g. you may not need to install Node.js
 	make \
-		asdf-install \
-		githooks-install \
-		nodejs-install
+		terraform-install
 
-.SILENT: \
-	config \
-	install \
+# ==============================================================================
+
+${VERBOSE}.SILENT: \
 	build \
-	test
+	clean \
+	config \
+	dependencies \
+	deploy \
