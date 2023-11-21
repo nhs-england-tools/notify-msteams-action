@@ -23,10 +23,3 @@ repos:
     args: ["check=staged-changes"]
     language: script
     pass_filenames: false
-- repo: local
-  hooks:
-  - id: check-terraform-format
-    name: Check Terraform Format
-    entry: ./scripts/githooks/check-terraform-format.sh
-    language: script
-    pass_filenames: false
