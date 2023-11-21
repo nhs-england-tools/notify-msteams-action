@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          make install
+          make dependencies
 
       - name: Rebuild the dist/ directory
         run: |

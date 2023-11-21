@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          make install
+          make dependencies
       - run: |
           make build
 
