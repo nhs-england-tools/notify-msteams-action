@@ -25,49 +25,8 @@ on:
         type: string
 
 jobs:
-  test-unit:
-    name: "Unit tests"
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v4
-      - name: "Run unit test suite"
-        run: |
-          make test-unit
-      - name: "Save the result of fast test suite"
-        run: |
-          echo "Nothing to save"
-  test-lint:
-    name: "Linting"
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v4
-      - name: "Run linting"
-        run: |
-          make test-lint
-      - name: "Save the linting result"
-        run: |
-          echo "Nothing to save"
-  test-coverage:
-    name: "Test coverage"
-    needs: [test-unit]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v4
-      - name: "Run test coverage check"
-        run: |
-          make test-coverage
-      - name: "Save the coverage check result"
-        run: |
-          echo "Nothing to save"
   perform-static-analysis:
     name: "Perform static analysis"
-    needs: [test-unit]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -84,3 +43,20 @@ jobs:
           sonar_organisation_key: "${{ vars.SONAR_ORGANISATION_KEY }}"
           sonar_project_key: "${{ vars.SONAR_PROJECT_KEY }}"
           sonar_token: "${{ secrets.SONAR_TOKEN }}"
+  test-e2e:
+    name: "End-to-end test"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+      - run: |
+          make dependencies
+          make build
+      - name: "Run the end-to-end test by invoking the action"
+        uses: ./
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          message-title: Title
+          message-text: Text
+          link: ${{ github.event.pull_request.html_url }}
