@@ -61,6 +61,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
-          message-title: Title
-          message-text: Text
+          message-title: "This is an end-to-end test"
+          message-text: "It worked!"
           link: ${{ github.event.pull_request.html_url }}
