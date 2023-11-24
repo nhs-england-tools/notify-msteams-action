@@ -1,8 +1,10 @@
 name: "CI/CD publish"
 
 on:
-  pull_request:
-    types: [closed]
+  workflow_run:
+    workflows: ["CI/CD pull request"]
+    types:
+      - completed
     branches:
       - main
 
@@ -10,7 +12,6 @@ jobs:
   metadata:
     name: "Set CI/CD metadata"
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
     timeout-minutes: 1
     outputs:
       build_datetime: ${{ steps.variables.outputs.build_datetime }}
@@ -40,18 +41,22 @@ jobs:
           export VERSION="${{ steps.variables.outputs.version }}"
           make list-variables
   publish:
-    name: "Publish packages"
+    name: "Publish artefact"
     runs-on: ubuntu-latest
     needs: [metadata]
-    if: github.event.pull_request.merged == true
     timeout-minutes: 3
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v4
-      - name: "Get the artefacts"
+      - name: "Download artefact"
+        uses: actions/download-artifact@v3
+        with:
+          name: notify-msteams-action-dist
+      - name: "Unzip artefact"
         run: |
-          echo "Getting the artefacts created by the build stage ..."
-          # TODO: Use either action/cache or action/upload-artifact
+          mkdir -p ./dist
+          rm -f ./dist/.gitkeep
+          unzip notify-msteams-action-dist.zip -d ./dist
       - name: "Create release"
         id: create_release
         uses: actions/create-release@v1
@@ -64,15 +69,15 @@ jobs:
             Release of ${{ needs.metadata.outputs.version }}
           draft: false
           prerelease: false
-      # - name: "Upload release asset"
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: "${{ steps.create_release.outputs.upload_url }}"
-      #     asset_path: ./*
-      #     asset_name: repository-template-${{ needs.metadata.outputs.version }}.tar.gz
-      #     asset_content_type: "application/gzip"
+      - name: "Upload release asset"
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: "${{ steps.create_release.outputs.upload_url }}"
+          asset_path: ./*
+          asset_name: notify-msteams-action-${{ needs.metadata.outputs.version }}.zip
+          asset_content_type: "application/zip"
   success:
     name: "Success notification"
     runs-on: ubuntu-latest
@@ -80,13 +85,13 @@ jobs:
     steps:
       - name: "Check prerequisites for notification"
         id: check
-        run: echo "secret_exist=${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL != '' }}" >> $GITHUB_OUTPUT
+        run: echo "secret_exist=${{ secrets.TEAMS_WEBHOOK_URL != '' }}" >> $GITHUB_OUTPUT
       - name: "Notify on publishing packages"
         if: steps.check.outputs.secret_exist == 'true'
-        uses: nhs-england-tools/notify-msteams-action@v0.0.4
+        uses: nhs-england-tools/notify-msteams-action@v${{ needs.metadata.outputs.version }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          teams-webhook-url: ${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL }}
-          message-title: "Notification title"
-          message-text: "This is a notification body"
+          teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          message-title: "nhs-england-tools/notify-msteams-action@v${{ needs.metadata.outputs.version }}"
+          message-text: "A new version of this GitHub action has just been published."
           link: ${{ github.event.pull_request.html_url }}
