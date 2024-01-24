@@ -10,13 +10,13 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           ./scripts/sbom-generator.sh
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: sbom-spdx.json
           path: ./sbom-spdx.json
       - run: |
           ./scripts/cve-scanner.sh
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: cve-scan.json
           path: ./cve-scan.json
