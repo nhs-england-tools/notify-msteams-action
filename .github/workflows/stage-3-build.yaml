@@ -19,14 +19,22 @@ on:
         description: "Node.js version, set by the CI/CD pipeline workflow"
         required: true
         type: string
+      python_version:
+        description: "Python version, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
+      terraform_version:
+        description: "Terraform version, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
       version:
         description: "Version of the software, set by the CI/CD pipeline workflow"
         required: true
         type: string
 
 jobs:
-  artefact:
-    name: "Artefact"
+  artefact-1:
+    name: "Artefact 1"
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:

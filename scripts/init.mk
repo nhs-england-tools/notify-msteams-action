@@ -2,6 +2,7 @@
 
 include scripts/docker/docker.mk
 include scripts/tests/test.mk
+-include scripts/terraform/terraform.mk
 
 # ==============================================================================
 
@@ -42,6 +43,15 @@ githooks-run: # Run git hooks configured in this repository @Operations
 _install-dependency: # Install asdf dependency - mandatory: name=[listed in the '.tool-versions' file]; optional: version=[if not listed]
 	asdf plugin add ${name} ||:
 	asdf install ${name} $(or ${version},)
+
+	echo ${name}
+	asdf plugin add ${name} ||:
+	asdf install ${name} $(or ${version},)
+
+_install-dependencies: # Install all the dependencies listed in .tool-versions
+	for plugin in $$(grep ^[a-z] .tool-versions | sed 's/[[:space:]].*//'); do
+		make _install-dependency name="$${plugin}"
+	done
 
 clean:: # Remove all generated and temporary files (common) @Operations
 	rm -rf \
@@ -137,6 +147,7 @@ HELP_SCRIPT = \
 # ==============================================================================
 
 ${VERBOSE}.SILENT: \
+	_install-dependencies \
 	_install-dependency \
 	clean \
 	config \
