@@ -106,7 +106,7 @@ This option is an extension built upon option 2a.
 - Pros
   - Usage of a GitHub native functionality
 - Cons
-  - Reliance on the GitHub DSL (coding in yaml) may lead to less portable solution
+  - Reliance on the GitHub DSL (coding in YAML) may lead to less portable solution
   - Implementation of the functionality has to be duplicated for the git hook
 
 ### Outcome
@@ -126,7 +126,7 @@ As a result of the above decision
 - the name of the file will be `check-file-format.sh`
 - there will be a `pre-commit` runner installed by the [pre-commit](https://pre-commit.com/) framework using a make target
 - the GitHub Action will call the git hook `check-file-format.sh` script directly
-- and a couple of `Makefile` targets like `config`, `githooks-install` will be implemented to bootstrap the project
+- and a couple of `Makefile` targets like `config`, `githooks-config` will be implemented to bootstrap the project
 
 The intention of this decision is to guide any other git hook and GitHub Action implementations.
 
@@ -136,12 +136,12 @@ Both, the git hook and the GitHub Action should be executed automatically as par
 
 ## Notes
 
-There is an emerging practice to use projects like [act](https://github.com/nektos/act) to make GitHub actions even more portable. The recommendation is for this tool to be assessed at further stages of the [nhs-england-tools/repository-template](https://github.com/nhs-england-tools/repository-template) project implementation, in the context of this decision record.
+There is an emerging practice to use projects like [act](https://github.com/nektos/act) to make GitHub Actions even more portable. ~~The recommendation is for this tool to be assessed at further stages of the [nhs-england-tools/repository-template](https://github.com/nhs-england-tools/repository-template) project implementation, in the context of this decision record.~~ Update: Please see the [Test GitHub Actions locally](../user-guides/Test_GitHub_Actions_locally.md) user guide.
 
 ## Actions
 
-- [ ] Ensure the naming convention of the other git hooks follows the pattern set by the `./scripts/githooks/check-file-format.sh` script
-- [ ] Relocate shell scripts that are called by the GitHub workflow, currently placed in the `./scripts` directory, to `./.github/workflows/scripts`
+- [x] Ensure the naming convention of the other git hooks follows the pattern set by the `scripts/githooks/check-file-format.sh` script
+- [ ] ~~Relocate shell scripts that are called by the GitHub workflow, currently placed in the `scripts` directory, to `.github/workflows/scripts`.~~ Update: Scripts provided along with this repository template are made to be agnostic from any provider's workflow implementation; this is by design. Therefore, the `scripts` directory is the right place for the shell scripts.
 
 ## Tags
 

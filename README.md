@@ -6,14 +6,12 @@ This action uses typescript and is built from the [typescript-action](https://gi
 
 ## Table of Contents
 
-- [Notify MS Teams](#notify-msteams-action)
+- [Notify MSTeams Action](#notify-msteams-action)
   - [Table of Contents](#table-of-contents)
   - [Installation](#installation)
+  - [To work on this repository](#to-work-on-this-repository)
     - [Prerequisites](#prerequisites)
   - [Usage](#usage)
-  - [Architecture](#architecture)
-    - [Diagrams](#diagrams)
-  - [Contributing](#contributing)
   - [Contacts](#contacts)
   - [Licence](#licence)
 
@@ -36,7 +34,7 @@ Add the following section to your existing workflow file:
 
 Follow the instructions [to add an Incoming Webhook](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet) to the Teams channel of your choice.
 
-Add the webhook url from above as a [repository secret](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/managing-encrypted-secrets-for-your-repository-and-organization-for-github-codespaces#adding-secrets-for-a-repository) with the following name:
+Add the webhook URL from above as a [repository secret](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/managing-encrypted-secrets-for-your-repository-and-organization-for-github-codespaces#adding-secrets-for-a-repository) with the following name:
 
 ```shell
 TEAMS_WEBHOOK_URL
@@ -77,24 +75,6 @@ The steps above detail how to quickly use this action within your repository. Th
 An example of how the notification could appear in Microsoft Teams is provided:
 
 ![Microsoft Teams notification showing the adaptive card being displayed to the user for a "Pull request opened" event](docs/images/msteams-action-notification.png)
-
-## Architecture
-
-### Diagrams
-
-The [C4 model](https://c4model.com/) is a simple and intuitive way to create software architecture diagrams that are clear, consistent, scalable and most importantly collaborative. This should result in documenting all the system interfaces, external dependencies and integration points.
-
-![Repository Template](./docs/diagrams/Repository_Template_GitHub_Generic.png)
-
-## Contributing
-
-Describe or link templates on how to raise an issue, feature request or make a contribution to the codebase. Reference the other documentation files, like
-
-- Environment setup for contribution, i.e. `CONTRIBUTING.md`
-- Coding standards, branching, linting, practices for development and testing
-- Release process, versioning, changelog
-- Backlog, board, roadmap, ways of working
-- High-level requirements, guiding principles, decision records, etc.
 
 ## Contacts
 
