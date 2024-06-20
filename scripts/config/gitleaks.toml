@@ -17,8 +17,6 @@ regexes = [
 
 [allowlist]
 paths = [
-  '''dist/index.js.map''',
-  '''dist/index.js''',
   '''.terraform.lock.hcl''',
   '''poetry.lock''',
   '''yarn.lock''',

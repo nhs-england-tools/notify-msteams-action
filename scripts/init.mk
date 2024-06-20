@@ -41,9 +41,6 @@ githooks-run: # Run git hooks configured in this repository @Operations
 		--all-files
 
 _install-dependency: # Install asdf dependency - mandatory: name=[listed in the '.tool-versions' file]; optional: version=[if not listed]
-	asdf plugin add ${name} ||:
-	asdf install ${name} $(or ${version},)
-
 	echo ${name}
 	asdf plugin add ${name} ||:
 	asdf install ${name} $(or ${version},)
