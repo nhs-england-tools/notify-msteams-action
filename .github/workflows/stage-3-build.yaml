@@ -41,7 +41,7 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v4
       - name: "Setup Node.js"
-        uses: actions/setup-node@v4.0.0
+        uses: actions/setup-node@v4.0.3
         with:
           node-version: ${{ inputs.nodejs_version }}
       - name: "Install dependencies"
