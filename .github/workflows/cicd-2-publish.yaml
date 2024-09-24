@@ -1,8 +1,10 @@
 name: "CI/CD publish"
 
 on:
-  push:
+  workflow_run:
+    workflow: ["CI/CD pull request"]
     branches: [ "main" ]
+    types: ["completed"]
 
 jobs:
   metadata:
@@ -49,9 +51,11 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v4
       - name: "Download artefact"
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.0
         with:
           name: notify-msteams-action-dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
       - name: "Unzip artefact"
         run: |
           mkdir -p ./dist
