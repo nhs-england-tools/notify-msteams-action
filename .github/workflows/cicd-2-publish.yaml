@@ -2,9 +2,12 @@ name: "CI/CD publish"
 
 on:
   workflow_run:
-    workflow: ["CI/CD pull request"]
-    branches: [ "main" ]
-    types: ["completed"]
+    workflow: 
+      - "CI/CD pull request"
+    branches: 
+      - "main"
+    types: 
+      - "completed"
 
 jobs:
   metadata:
