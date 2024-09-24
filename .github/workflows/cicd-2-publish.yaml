@@ -2,7 +2,7 @@ name: "CI/CD publish"
 
 on:
   workflow_run:
-    workflow: [CI/CD pull request]
+    workflows: [CI/CD pull request]
     branches: [main]
     types: [completed]
 
