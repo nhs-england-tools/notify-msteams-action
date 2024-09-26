@@ -53,7 +53,7 @@ jobs:
       - name: "Download artefact"
         uses: actions/download-artifact@v4.1.0
         with:
-          name: notify-msteams-action-dist
+          name: notify-msteams-action-dist.zip
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
       - name: "Unzip artefact"
