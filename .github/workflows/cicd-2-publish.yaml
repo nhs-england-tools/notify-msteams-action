@@ -3,7 +3,7 @@ name: "CI/CD publish"
 on:
   workflow_run:
     workflows: ["CI/CD pull request"]
-    # branches: [ "main" ]
+    branches: [ "**" ]
     types: ["completed"]
 
 jobs:
