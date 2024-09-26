@@ -63,6 +63,7 @@ jobs:
           mkdir -p ./dist
           rm -f ./dist/.gitkeep
           unzip notify-msteams-action-dist.zip -d ./dist
+        working-directory: ${{ github.workspace }}
       - name: "Semantic Release"
         uses: cycjimmy/semantic-release-action@v4.1.0
         id: semantic
