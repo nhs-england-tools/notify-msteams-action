@@ -103,7 +103,7 @@ jobs:
     name: "Build stage"
     needs: [metadata, test-stage]
     uses: ./.github/workflows/stage-3-build.yaml
-    if: github.ref == 'refs/heads/main' || needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
+    #if: github.ref == 'refs/heads/main' || needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
     with:
       build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
       build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
@@ -117,7 +117,7 @@ jobs:
     name: "Acceptance stage"
     needs: [metadata, build-stage]
     uses: ./.github/workflows/stage-4-acceptance.yaml
-    if: github.ref == 'refs/heads/main' || needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
+    #if: github.ref == 'refs/heads/main' || needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
     with:
       build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
       build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
