@@ -127,3 +127,7 @@ jobs:
       terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
       version: "${{ needs.metadata.outputs.version }}"
     secrets: inherit
+  publish-stage: # Recommended maximum execution time is 2 minutes
+    name: "Publish stage"
+    needs: [acceptance-stage]
+    uses: ./.github/workflows/cicd-2-publish.yaml
