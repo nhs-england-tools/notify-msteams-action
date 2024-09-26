@@ -3,7 +3,7 @@ name: "CI/CD publish"
 on:
   workflow_run:
     workflows: ["CI/CD pull request"]
-    branches: [ "main" ]
+    # branches: [ "main" ]
     types: ["completed"]
 
 jobs:
@@ -53,11 +53,12 @@ jobs:
       - name: "Download artefact"
         uses: actions/download-artifact@v4.1.0
         with:
-          name: notify-msteams-action-dist.zip
+          name: notify-msteams-action-dist
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
       - name: "Unzip artefact"
         run: |
+          ls -R
           mkdir -p ./dist
           rm -f ./dist/.gitkeep
           unzip notify-msteams-action-dist.zip -d ./dist
