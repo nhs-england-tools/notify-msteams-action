@@ -51,7 +51,7 @@ jobs:
         run: |
           make build
       - name: "Upload artefact"
-        uses: actions/upload-artifact@v4.1.0
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: notify-msteams-action-dist.zip
           path: dist/
