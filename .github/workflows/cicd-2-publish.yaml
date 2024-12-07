@@ -50,6 +50,19 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v4
+      - name: "Setup Node.js"
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: ${{ steps.variables.outputs.nodejs_version }}
+      - name: "Install dependencies"
+        run: |
+          make dependencies
+      - name: "Build distribution"
+        run: |
+          make build
+      - name: update package.json ${{ steps.semantic.outputs.new_release_version }}
+        run: |
+          ./update-version.sh 
       - name: "Semantic Release"
         uses: cycjimmy/semantic-release-action@v4.1.1
         id: semantic
