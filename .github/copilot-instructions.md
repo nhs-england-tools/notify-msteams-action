@@ -28,7 +28,7 @@ Output: none (side-effect only: HTTP POST). Maintain JSON structure: top-level `
 
 ## Writing & Style (Vale)
 
-- All Markdown and instruction changes must pass Vale (config: `scripts/config/vale/vale.ini`).
+- All Markdown and instruction changes must pass Vale (configuration file: `scripts/config/vale/vale.ini`).
 - Use approved terminology and capitalization (e.g. Terraform, Adaptive Card, GitHub, JavaScript).
 - Prefer full words over abbreviations where flagged (configuration, interoperability, environment variables).
 - If a legitimate domain term is flagged, add it to the custom vocabulary (`scripts/config/vale/styles/Vocab/`) rather than weakening prose.
