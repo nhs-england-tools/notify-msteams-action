@@ -44,12 +44,12 @@ $ make runner-act workflow="stage-1-commit" job="create-lines-of-code-report"
 [Commit stage/Count lines of code]   🐳  docker exec cmd=[bash --noprofile --norc -e -o pipefail /var/run/act/workflow/1-composite-1.sh] user= workdir=
 | updating: lines-of-code-report.json (deflated 68%)
 [Commit stage/Count lines of code]   ✅  Success - Main Compress CLOC report
-[Commit stage/Count lines of code]   ☁  git clone 'https://github.com/actions/upload-artifact' # ref=v3
+[Commit stage/Count lines of code]   ☁  git clone 'https://github.com/actions/upload-artifact' # ref=ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
 [Commit stage/Count lines of code] ⭐ Run Main Check prerequisites for sending the report
 [Commit stage/Count lines of code]   🐳  docker exec cmd=[bash --noprofile --norc -e -o pipefail /var/run/act/workflow/1-composite-check.sh] user= workdir=
 [Commit stage/Count lines of code]   ✅  Success - Main Check prerequisites for sending the report
 [Commit stage/Count lines of code]   ⚙  ::set-output:: secrets_exist=false
-[Commit stage/Count lines of code]   ☁  git clone 'https://github.com/aws-actions/configure-aws-credentials' # ref=v2
+[Commit stage/Count lines of code]   ☁  git clone 'https://github.com/aws-actions/configure-aws-credentials' # ref=a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # v5.0.0
 [Commit stage/Count lines of code]   ✅  Success - Main Count lines of code
 [Commit stage/Count lines of code]   ⚙  ::set-output:: secrets_exist=false
 [Commit stage/Count lines of code] ⭐ Run Post Count lines of code
