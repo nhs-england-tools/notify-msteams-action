@@ -19,17 +19,17 @@ This action uses typescript and is built from the [typescript-action](https://gi
 
 This action can be called as part of your [GitHub action](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions) workflows. to achieve this follow these steps:
 
-Add the following section to your existing workflow file:
+Add the following section to your existing workflow file (pin to a released major tag; the moving `v1` tag will always point at the latest backward-compatible release within the same major):
 
 ```yml
-      - name: Testing action to notify Teams
-        uses: nhs-england-tools/notify-msteams-action@v0.0.4
+      - name: Notify Teams
+        uses: nhs-england-tools/notify-msteams-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
           message-title: "Replace with an appropriate title"
           message-text: "Replace with appropriate text"
-          link: https://google.com
+          link: https://example.org
 ```
 
 Follow the instructions [to add an Incoming Webhook](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet) to the Teams channel of your choice.
@@ -75,6 +75,43 @@ The steps above detail how to quickly use this action within your repository. Th
 An example of how the notification could appear in Microsoft Teams is provided:
 
 ![Microsoft Teams notification showing the adaptive card being displayed to the user for a "Pull request opened" event](docs/images/msteams-action-notification.png)
+
+### Versioning & Release Process
+
+This repository uses [semantic-release](https://semantic-release.gitbook.io/) to automatically:
+
+- Determine the next version from Conventional Commit messages.
+- Generate release notes and create a GitHub Release with tag `vX.Y.Z`.
+- Build and bundle the Action (TypeScript -> single `dist/index.js`).
+- Commit the generated `dist/` assets and `VERSION` file as part of the release commit.
+- Update the moving major tag (e.g. `v1`) to point to the latest release of that major.
+- Update the consolidated changelog in `CHANGELOG.md`.
+
+Consumers SHOULD depend on a major tag (e.g. `@v1`) or a fully qualified tag (e.g. `@v1.2.3`). The `main` branch is not guaranteed to contain built artefacts and must not be referenced directly in external workflows.
+
+### Contributing (Important Policy About `dist/`)
+
+Do not commit the `dist/` directory in pull requests. The CI pipeline will fail the PR if `dist/` is present. The release workflow rebuilds and commits `dist/` automatically. This keeps review noise low and ensures reproducible builds.
+
+To test local modifications, run:
+
+```bash
+npm ci
+npm run package
+```
+
+Then you can reference the action locally in a workflow within this repository using `uses: ./` (which will use the freshly generated `dist/`).
+
+### Conventional Commits
+
+To trigger proper version bumps, use the Conventional Commits format, for example:
+
+- `feat: add support for message colour`
+- `fix: correct Teams webhook error handling`
+- `chore: update dependencies`
+- `docs: clarify usage section`
+
+Breaking changes must include `!` after the type or the phrase `BREAKING CHANGE:` in the footer.
 
 ## Contacts
 

@@ -9,11 +9,32 @@ on:
   pull_request:
     types: [opened, reopened]
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
+  guard-dist:
+    name: "Guard: prevent committed dist changes"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+      - name: "Fail if dist/ contains changes"
+        run: |
+          if git ls-files --error-unmatch dist 2>/dev/null; then
+            echo "dist/ directory is committed. This repository expects dist to be added only by release automation." >&2
+            echo "Remove dist/ changes from your PR. They will be generated during release." >&2
+            exit 1
+          else
+            echo "No committed dist/ directory detected. Proceeding.";
+          fi
   metadata:
     name: "Set CI/CD metadata"
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    needs: [guard-dist]
     outputs:
       build_datetime_london: ${{ steps.variables.outputs.build_datetime_london }}
       build_datetime: ${{ steps.variables.outputs.build_datetime }}
@@ -27,11 +48,25 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Set up Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+          cache: npm
+      - name: "Install dependencies"
+        run: npm ci
+      - name: "Build action bundle (dry-run context)"
+        run: npm run package
       - name: "Semantic Release"
         uses: cycjimmy/semantic-release-action@v4.1.1
         id: semantic
         with:
           dry_run: true
+          extra_plugins: |
+            @semantic-release/git
+            @semantic-release/npm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Set CI/CD variables"
