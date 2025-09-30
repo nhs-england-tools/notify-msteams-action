@@ -12,6 +12,7 @@ It complements the existing documents:
 - `Sign_Git_commits.md` (general commit signing)
 
 ---
+
 ## 1. Architecture Overview
 
 Component | Purpose
@@ -29,6 +30,7 @@ Release flow (simplified):
 5. GitHub UI shows commit and tag as **Verified**.
 
 ---
+
 ## 2. Prerequisites
 
 - An organisation (or user) GitHub account with permission to create a GitHub App.
@@ -36,6 +38,7 @@ Release flow (simplified):
 - Local machine with recent `gpg` (GnuPG 2.2+) and `bash`.
 
 ---
+
 ## 3. Create a GitHub App
 
 1. Navigate to: Settings → Developer settings → GitHub Apps → New GitHub App.
@@ -65,6 +68,7 @@ Record:
 > Do not commit the private key; treat it as sensitive material.
 
 ---
+
 ## 4. Generate a Dedicated GPG Signing Key
 
 Use a distinct identity separate from personal developer keys.
@@ -116,16 +120,20 @@ echo "Store passphrase safely: $PASSPHRASE"
 ```bash
 gpg --list-secret-keys --keyid-format LONG "$BOT_EMAIL"
 ```
+
 Example output (truncated):
-```
+
+```bash
 sec   ed25519/AAAAAAAAAAAAAAAA 2025-09-30 [SC]
       FINGERPRINTFINGERPRINTFINGERPRINTFINGERPRINT
 uid                 [ultimate] notify-msteams-action release bot <actions+notify-msteams-action@yourdomain.example>
 ssb   ed25519/BBBBBBBBBBBBBBBB 2025-09-30 [E]
 ```
+
 Use the 40-hex-character fingerprint (not the short key ID) for audits.
 
 ---
+
 ## 5. Export Keys and Create Revocation Certificate
 
 ```bash
@@ -152,6 +160,7 @@ Storage recommendations:
 - `revoke-release-key.asc`: Offline / restricted (use only if key should be revoked).
 
 ---
+
 ## 6. Add the Public Key to GitHub
 
 1. Log in as the account that will appear as author/committer.
@@ -160,6 +169,7 @@ Storage recommendations:
 4. Ensure the email in the UID (`BOT_EMAIL`) is verified under that account (Settings → Emails). Without this, signatures will not show as **Verified**.
 
 ---
+
 ## 7. Store Secrets in the Repository
 
 Repository Settings → Secrets and variables → Actions → New repository secret:
@@ -176,6 +186,7 @@ Repository Settings → Secrets and variables → Actions → New repository sec
 Consider using an **Environment** with required reviewers for additional control if higher assurance is needed.
 
 ---
+
 ## 8. Workflow Integration (Conceptual Snippet)
 
 The publish workflow adds three phases:
@@ -229,9 +240,11 @@ The commit and tag produced by semantic-release will now:
 - Be pushed using the App token.
 
 ---
+
 ## 9. Verifying a Release Commit
 
 After a publish completes:
+
 1. Inspect the release commit in the GitHub UI → should display **Verified**.
 2. Locally verify the signature (optional):
 
@@ -242,11 +255,13 @@ After a publish completes:
    ```
 
 If not verified:
+
 - Check that the email matches the key UID and is verified in GitHub.
 - Ensure the public key was added to the correct account.
 - Confirm the workflow logs show key import and signing configuration.
 
 ---
+
 ## 10. Rotation Procedure
 
 Rotate at least every 6–12 months or on suspicion of compromise.
@@ -262,6 +277,7 @@ Rotate at least every 6–12 months or on suspicion of compromise.
 **Automated rotation idea:** Add a scheduled workflow that opens a pull request reminding maintainers to rotate the key one month before expiration (lightweight operational control).
 
 ---
+
 ## 11. Revocation Certificate Usage
 
 If the private key is believed compromised:
@@ -282,6 +298,7 @@ If the private key is believed compromised:
 Result: Past commits remain historically signed; future validation will show the old key as revoked (depending on trust model of the tooling verifying it).
 
 ---
+
 ## 12. Hardening Recommendations
 
 Area | Recommendation
@@ -296,6 +313,7 @@ Environment Protection | Use an Environment with required approvers for the publ
 Subkeys (Advanced) | Create a primary (certify-only) key offline and a signing subkey for the runner.
 
 ---
+
 ## 13. Troubleshooting Matrix
 
 Symptom | Likely Cause | Resolution
@@ -307,6 +325,7 @@ Tag unsigned | `tag.gpgSign` not set | Add `git config --global tag.gpgSign true
 App token push denied | Missing Contents write permission | Update App permissions and reinstall.
 
 ---
+
 ## 14. Optional Enhancements
 
 - Add a guard step that fails if `GPG_PRIVATE_KEY` is empty while branch protection requires signed commits.
@@ -320,6 +339,7 @@ App token push denied | Missing Contents write permission | Update App permissio
 - Implement a scheduled reminder for key rotation.
 
 ---
+
 ## 15. Summary
 
 Using a GitHub App + dedicated GPG automation key yields:
