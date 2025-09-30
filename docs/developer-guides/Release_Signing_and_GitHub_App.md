@@ -7,6 +7,7 @@ This guide describes a secure pattern for producing signed release commits and t
 3. Rotation and revocation procedures that minimise exposure while preserving provenance.
 
 It complements the existing documents:
+
 - `Release_Process.md` (overall release automation)
 - `Sign_Git_commits.md` (general commit signing)
 
@@ -20,6 +21,7 @@ GPG Key (automation) | Provides a cryptographic signature on the release commit 
 Workflow Logic | Imports the private key, enables signing, obtains the App token, runs semantic-release.
 
 Release flow (simplified):
+
 1. Publish workflow starts after merge to `main`.
 2. Workflow obtains a GitHub App installation token.
 3. Workflow imports GPG key, configures `git` for signing.
@@ -38,19 +40,24 @@ Release flow (simplified):
 
 1. Navigate to: Settings → Developer settings → GitHub Apps → New GitHub App.
 2. Recommended fields:
+
    - Name: `notify-msteams-action-release`
    - Homepage URL: Repository URL
    - Webhook: Disabled (not required for basic releases)
+
 3. Permissions (Repository):
+
    - Contents: Read & write
    - Issues: Read & write (release notes may reference issues)
    - Pull requests: Read & write (release notes may reference pull requests)
    - Metadata: Read (implicit)
+
 4. Events: None required (semantic-release drives actions proactively).
 5. Create the App, then Install it on the target repository.
 6. Generate a **Private key** and download the `.pem` file.
 
 Record:
+
 - App ID (numeric)
 - Installation ID (visible in URL after install or retrievable via API)
 - Private key content
@@ -139,6 +146,7 @@ EOF
 ```
 
 Storage recommendations:
+
 - `public-release-key.asc`: Safe to share; commit optional (not required).
 - `private-release-key.asc`: Never commit; store in a secret manager.
 - `revoke-release-key.asc`: Offline / restricted (use only if key should be revoked).
@@ -171,6 +179,7 @@ Consider using an **Environment** with required reviewers for additional control
 ## 8. Workflow Integration (Conceptual Snippet)
 
 The publish workflow adds three phases:
+
 1. Import GPG key and enable signing.
 2. Mint a GitHub App token.
 3. Run semantic-release with that token.
@@ -214,6 +223,7 @@ Illustrative fragment (do **not** duplicate if already integrated):
 ```
 
 The commit and tag produced by semantic-release will now:
+
 - Be authored with the automation identity.
 - Be signed with the imported key.
 - Be pushed using the App token.
@@ -224,6 +234,7 @@ The commit and tag produced by semantic-release will now:
 After a publish completes:
 1. Inspect the release commit in the GitHub UI → should display **Verified**.
 2. Locally verify the signature (optional):
+
    ```bash
    git fetch --tags origin
    git show --show-signature <release-commit-sha>
@@ -254,11 +265,14 @@ Rotate at least every 6–12 months or on suspicion of compromise.
 ## 11. Revocation Certificate Usage
 
 If the private key is believed compromised:
+
 1. Import and apply the revocation certificate locally:
+
    ```bash
    gpg --import revoke-release-key.asc
    gpg --list-keys --with-colons | grep '^rev' || echo "Revocation not applied"
    ```
+
 2. Publish the updated (revoked) public key to a keyserver if you use them (optional; GitHub relies on its stored copy).
 3. Remove the compromised secrets from the repository settings.
 4. Generate and register a new key (Sections 4–6).
@@ -297,16 +311,19 @@ App token push denied | Missing Contents write permission | Update App permissio
 
 - Add a guard step that fails if `GPG_PRIVATE_KEY` is empty while branch protection requires signed commits.
 - Add a post-release verification step:
+
   ```bash
   git verify-commit HEAD || exit 1
   git describe --tags --exact-match HEAD >/dev/null 2>&1 && git verify-tag $(git describe --tags --exact-match HEAD)
   ```
+
 - Implement a scheduled reminder for key rotation.
 
 ---
 ## 15. Summary
 
 Using a GitHub App + dedicated GPG automation key yields:
+
 - Minimal access token scope.
 - Cryptographically verifiable provenance for release artefacts (`dist/`, `package.json` changes, `VERSION`).
 - Clear operational playbooks for rotation and emergency revocation.
