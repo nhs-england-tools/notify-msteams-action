@@ -13,12 +13,12 @@ For details on securely signing release commits and using a GitHub App token, se
    - Checks out the code.
    - Installs dependencies and builds the production bundle with `npm run package` (emits `dist/index.js` + `licenses.txt`).
    - Runs `semantic-release` which:
-    - Calculates the next version from Conventional Commits.
-    - Updates release notes and creates a Git tag `vX.Y.Z`.
-    - Commits the generated `dist/` assets, updated `package.json` / `package-lock.json` version metadata, and the `VERSION` file via the `@semantic-release/git` plugin.
-    - Creates a GitHub Release.
-    - Updates the moving major tag (e.g. `v1`) to the new version tag.
-    - (If repository secrets `GPG_PRIVATE_KEY` (+ optional `GPG_PASSPHRASE`) are configured) imports the key and signs the release commit and tag.
+   - Calculates the next version from Conventional Commits.
+   - Updates release notes and creates a Git tag `vX.Y.Z`.
+   - Commits the generated `dist/` assets, updated `package.json` / `package-lock.json` version metadata, and the `VERSION` file via the `@semantic-release/git` plugin.
+   - Creates a GitHub Release.
+   - Updates the moving major tag (e.g. `v1`) to the new version tag.
+   - (If repository secrets `GPG_PRIVATE_KEY` (+ optional `GPG_PASSPHRASE`) are configured) imports the key and signs the release commit and tag.
 
 ## Rationale
 
