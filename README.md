@@ -89,6 +89,21 @@ This repository uses [semantic-release](https://semantic-release.gitbook.io/) to
 
 Consumers SHOULD depend on a major tag (e.g. `@v1`) or a fully qualified tag (e.g. `@v1.2.3`). The `main` branch is not guaranteed to contain built artefacts and must not be referenced directly in external workflows.
 
+For information about signed release commits, using a GitHub App for least-privilege release automation, key rotation, and revocation, see: [Release Signing & GitHub App](docs/developer-guides/Release_Signing_and_GitHub_App.md).
+
+### Developer Guides Index
+
+Centralised list of developer-facing guides in this repository:
+
+| Guide | Description |
+|-------|-------------|
+| [Bash and Make](docs/developer-guides/Bash_and_Make.md) | Conventions and patterns for Make targets and supporting Bash scripts, including target signatures and reuse. |
+| [Scripting Docker](docs/developer-guides/Scripting_Docker.md) | Opinionated Docker workflows: build, test, version (CalVer patterns), push and image management conventions. |
+| [Scripting Terraform](docs/developer-guides/Scripting_Terraform.md) | Terraform automation via Make wrappers, structure, state handling, quality enforcement and CI integration. |
+| [Release Process](docs/developer-guides/Release_Process.md) | End-to-end semantic-release driven publish pipeline and rationale for build-at-release strategy. |
+| [Release Signing & GitHub App](docs/developer-guides/Release_Signing_and_GitHub_App.md) | Secure release provenance: GitHub App token usage, GPG key generation, rotation and revocation procedures. |
+| [Sign Git commits](docs/user-guides/Sign_Git_commits.md) | How to configure and use GPG or SSH for commit signature verification locally and in CI. |
+
 ### Contributing (Important Policy About `dist/`)
 
 Do not commit the `dist/` directory in pull requests. The CI pipeline will fail the PR if `dist/` is present. The release workflow rebuilds and commits `dist/` automatically. This keeps review noise low and ensures reproducible builds.

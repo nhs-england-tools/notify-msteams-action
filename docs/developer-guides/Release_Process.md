@@ -2,6 +2,8 @@
 
 This repository uses **semantic-release** to fully automate versioning and publishing of the GitHub Action.
 
+For details on securely signing release commits and using a GitHub App token, see the companion guide: [Release Signing & GitHub App](./Release_Signing_and_GitHub_App.md).
+
 ## Overview
 
 1. Developers raise pull requests with source changes only (no `dist/` directory committed).
@@ -95,3 +97,5 @@ If branch protection requires signed commits:
 3. (Optional) Add `GPG_PASSPHRASE` if the key is passphrase protected.
 
 On publish, the workflow step "Import GPG key and enable signing" configures `git config commit.gpgsign true` and `tag.gpgSign true` so the semantic-release generated commit and tag are signed. If the secrets are absent, semantic-release proceeds with unsigned commits (which will fail if branch protection mandates signatures—therefore the key must be present in that case).
+
+More advanced procedures (rotation, revocation, GitHub App integration) are documented in [Release Signing & GitHub App](./Release_Signing_and_GitHub_App.md).
