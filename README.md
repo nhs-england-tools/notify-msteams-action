@@ -83,7 +83,7 @@ This repository uses [semantic-release](https://semantic-release.gitbook.io/) to
 - Determine the next version from Conventional Commit messages.
 - Generate release notes and create a GitHub Release with tag `vX.Y.Z`.
 - Build and bundle the Action (TypeScript -> single `dist/index.js`).
-- Commit the generated `dist/` assets and `VERSION` file as part of the release commit.
+- Commit the generated `dist/` assets, the updated `package.json` (and `package-lock.json`) version metadata, and the `VERSION` file as part of the release commit.
 - Update the moving major tag (e.g. `v1`) to point to the latest release of that major.
 - Update the consolidated changelog in `CHANGELOG.md`.
 

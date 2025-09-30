@@ -12,9 +12,10 @@ This repository uses **semantic-release** to fully automate versioning and publi
    - Runs `semantic-release` which:
      - Calculates the next version from Conventional Commits.
      - Updates release notes and creates a Git tag `vX.Y.Z`.
-     - Commits the generated `dist/` assets and `VERSION` file via the `@semantic-release/git` plugin.
+  - Commits the generated `dist/` assets, updated `package.json` / `package-lock.json` version metadata, and the `VERSION` file via the `@semantic-release/git` plugin.
      - Creates a GitHub Release.
    - Updates the moving major tag (e.g. `v1`) to the new version tag.
+   - (If repository secrets `GPG_PRIVATE_KEY` (+ optional `GPG_PASSPHRASE`) are configured) imports the key and signs the release commit and tag.
 
 ## Rationale
 
@@ -84,3 +85,13 @@ Avoid editing tags directly; let semantic-release manage them.
 
 ---
 Maintainers: ensure `permissions: contents: write` is preserved in the publish workflow for tag/commit operations.
+
+### Commit Signing
+
+If branch protection requires signed commits:
+
+1. Generate a dedicated GPG key restricted to release automation (see `Sign_Git_commits.md`).
+2. Add the ASCII‑armoured private key as an Actions secret `GPG_PRIVATE_KEY`.
+3. (Optional) Add `GPG_PASSPHRASE` if the key is passphrase protected.
+
+On publish, the workflow step "Import GPG key and enable signing" configures `git config commit.gpgsign true` and `tag.gpgSign true` so the semantic-release generated commit and tag are signed. If the secrets are absent, semantic-release proceeds with unsigned commits (which will fail if branch protection mandates signatures—therefore the key must be present in that case).

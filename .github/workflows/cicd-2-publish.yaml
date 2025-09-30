@@ -57,6 +57,31 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: "Import GPG key and enable signing (optional)"
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          echo "Configuring GPG signing"
+          echo "$GPG_PRIVATE_KEY" > /tmp/private.key
+          gpg --batch --import /tmp/private.key
+          KEY_ID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec/ {print $5; exit}')
+          # Git identity (matches semantic-release defaults)
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          # Enable commit & tag signing
+          git config --global user.signingkey "$KEY_ID"
+          git config --global commit.gpgsign true
+          git config --global tag.gpgSign true
+          git config --global gpg.program gpg
+          echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
+          echo 'allow-loopback-pinentry' >> ~/.gnupg/gpg-agent.conf || true
+          export GPG_TTY=$(tty)
+          # (Best-effort) warm up agent / cache passphrase if provided
+          if [ -n "$GPG_PASSPHRASE" ]; then
+            echo "test" | gpg --batch --yes --passphrase "$GPG_PASSPHRASE" -s >/dev/null 2>&1 || true
+          fi
       - name: "Set up Node.js"
         uses: actions/setup-node@v4
         with:
