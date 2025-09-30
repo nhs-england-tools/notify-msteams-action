@@ -16,3 +16,7 @@ onboarding
 sed
 toolchain
 [A-Z]+s
+
+loopback
+plaintext
+subkey
