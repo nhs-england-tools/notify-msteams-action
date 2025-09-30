@@ -54,12 +54,12 @@ You can validate the action locally by creating a temporary workflow that uses `
 
 | Type  | Purpose                                | Example                                        |
 |-------|-----------------------------------------|------------------------------------------------|
-| feat  | New feature (minor bump)                | `feat: support custom message colour`          |
-| fix   | Bug fix (patch bump)                    | `fix: correct adaptive card JSON schema`       |
-| chore | Build/tooling changes                   | `chore: update eslint config`                  |
-| docs  | Documentation updates                   | `docs: add release process guide`              |
-| perf  | Performance improvement                 | `perf: reduce bundle size`                     |
-| refactor | Non-functional code change           | `refactor: simplify card builder`              |
+| `feat`  | New feature (minor bump)                | `feat: support custom message colour`          |
+| `fix`   | Bug fix (patch bump)                    | `fix: correct adaptive card JSON schema`       |
+| `chore` | Build/tooling changes                   | `chore: update eslint config`                  |
+| `docs`  | Documentation updates                   | `docs: add release process guide`              |
+| `perf`  | Performance improvement                 | `perf: reduce bundle size`                     |
+| `refactor` | Non-functional code change           | `refactor: simplify card builder`              |
 
 Breaking changes: add `!` (`feat!:`) or a `BREAKING CHANGE:` footer.
 
@@ -70,6 +70,7 @@ The guard job fails a pull request if `dist/` is present. Remove it before reque
 ## Manual Intervention
 
 If a release must be re-run (rare):
+
 1. Revert the release commit if necessary.
 2. Amend commit messages to adjust semantic meaning.
 3. Push to `main` again and allow the publish workflow to execute.
