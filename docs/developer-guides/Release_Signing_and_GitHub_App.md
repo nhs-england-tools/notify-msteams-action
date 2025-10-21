@@ -230,10 +230,12 @@ To make secret upload easier, repeatable, and less error-prone, use the provided
 ```
 
 **Prerequisites:**
+
 - GitHub CLI (`gh`) installed and authenticated: `gh auth login`
 - Repository permissions to manage secrets
 
 **Benefits of using the script:**
+
 - **Repeatable**: Same process for initial setup and rotation
 - **Less error-prone**: Validates files exist and reads content correctly
 - **Faster**: Uploads all five secrets in one command
@@ -355,6 +357,7 @@ Rotate at least every 6–12 months or on suspicion of compromise.
    - Navigate to GitHub App → Optional features → Commit signing
    - Add the new signing key (you can have multiple keys during transition)
 4. Update repository secrets with new values using the helper script:
+
    ```bash
    ./scripts/upload-signing-secrets.sh \
      --app-id <SAME_APP_ID> \
@@ -363,6 +366,7 @@ Rotate at least every 6–12 months or on suspicion of compromise.
      --signing-key ./new-signing-key.asc \
      --signing-key-passphrase "<NEW_PASSPHRASE>"
    ```
+
    Or manually update these secrets in the repository settings:
    - `GITHUB_APP_SIGNING_KEY_ID`: New key ID
    - `GITHUB_APP_SIGNING_KEY`: New private key content
