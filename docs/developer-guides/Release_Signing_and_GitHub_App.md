@@ -239,7 +239,7 @@ To make secret upload easier, repeatable, and less error-prone, use the provided
 - **Repeatable**: Same process for initial setup and rotation
 - **Less error-prone**: Validates files exist and reads content correctly
 - **Faster**: Uploads all five secrets in one command
-- **Auditable**: Shows summary before uploading with confirmation prompt
+- **Traceable**: Shows summary before uploading with confirmation prompt
 - **Secure**: Supports password masking and dry-run mode
 
 ### 7.3 Manual Upload (Alternative)
@@ -478,7 +478,7 @@ Using GitHub App native commit signing with a GPG wrapper script yields:
 3. **Minimal access token scope**: App tokens are scoped to specific repositories with least-privilege permissions.
 4. **Cryptographically verifiable provenance**: Release artefacts (`dist/`, `package.json` changes, `VERSION`) have strong cryptographic signatures.
 5. **Clear attribution**: Commits are attributed to the GitHub App, not an individual user account.
-6. **Auditable**: GitHub App activity is logged and traceable.
+6. **Traceable**: GitHub App activity is logged and traceable.
 7. **Secure**: Uses short-lived tokens and proper passphrase management.
 8. **CI/CD friendly**: GPG wrapper script enables seamless automation without interactive prompts.
 9. **Clear operational playbooks**: Well-defined procedures for rotation and emergency revocation.
