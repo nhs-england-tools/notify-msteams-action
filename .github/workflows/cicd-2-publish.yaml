@@ -94,7 +94,7 @@ jobs:
 
           # Set GPG_TTY for terminal interaction
           export GPG_TTY=$(tty)
-          
+
           # Log key fingerprint for audit (not the key itself)
           gpg --list-keys --with-colons | awk -F: '/^fpr/ {print "Using GPG key: " $10; exit}'
       - name: "Set up Node.js"
