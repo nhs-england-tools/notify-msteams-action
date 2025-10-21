@@ -18,7 +18,7 @@ For details on securely signing release commits and using a GitHub App token, se
    - Commits the generated `dist/` assets, updated `package.json` / `package-lock.json` version metadata, and the `VERSION` file via the `@semantic-release/git` plugin.
    - Creates a GitHub Release.
    - Updates the moving major tag (e.g. `v1`) to the new version tag.
-   - (If repository secrets `GPG_PRIVATE_KEY` (+ optional `GPG_PASSPHRASE`) are configured) imports the key and signs the release commit and tag.
+   - (If repository secrets `GITHUB_APP_SIGNING_KEY`, `GITHUB_APP_SIGNING_KEY_ID`, and `GITHUB_APP_SIGNING_KEY_PASSPHRASE` are configured) imports the GPG key and signs the release commit and tag using a GitHub App.
 
 ## Rationale
 
@@ -89,14 +89,25 @@ Avoid editing tags directly; let semantic-release manage them.
 ---
 Maintainers: ensure `permissions: contents: write` is preserved in the publish workflow for tag/commit operations.
 
-### Commit Signing
+### Commit Signing with GitHub App
 
-If branch protection requires signed commits:
+If branch protection requires signed commits, this repository uses GitHub App native commit signing:
 
-1. Generate a dedicated GPG key restricted to release automation (see `Sign_Git_commits.md`).
-2. Add the ASCII‑armoured private key as an Actions secret `GPG_PRIVATE_KEY`.
-3. (Optional) Add `GPG_PASSPHRASE` if the key is passphrase protected.
+1. Create a GitHub App with commit signing enabled and generate both authentication and signing keys.
+2. Configure the following repository secrets:
+   - `GITHUB_APP_ID`: GitHub App ID for authentication
+   - `GITHUB_APP_PRIVATE_KEY`: App private key (PEM format) for token generation
+   - `GITHUB_APP_SIGNING_KEY_ID`: GPG key ID for commit signing
+   - `GITHUB_APP_SIGNING_KEY`: ASCII-armoured GPG private key content
+   - `GITHUB_APP_SIGNING_KEY_PASSPHRASE`: Passphrase for the GPG signing key
 
-On publish, the workflow step "Import GPG key and enable signing" configures `git config commit.gpgsign true` and `tag.gpgSign true` so the semantic-release generated commit and tag are signed. If the secrets are absent, semantic-release proceeds with unsigned commits (which will fail if branch protection mandates signatures—therefore the key must be present in that case).
+On publish, the workflow:
 
-More advanced procedures (rotation, revocation, GitHub App integration) are documented in [Release Signing & GitHub App](./Release_Signing_and_GitHub_App.md).
+1. Generates a GitHub App installation token for authentication.
+2. Creates a GPG wrapper script that handles passphrase injection automatically.
+3. Imports the GPG signing key and configures git to use the wrapper script.
+4. Runs semantic-release which creates signed commits and tags attributed to the GitHub App.
+
+If the signing secrets are absent, semantic-release proceeds with unsigned commits (which will fail if branch protection mandates signatures—therefore the secrets must be present in that case).
+
+Complete setup procedures (key generation, GitHub App configuration, rotation, revocation) are documented in [Release Signing & GitHub App](./Release_Signing_and_GitHub_App.md).
