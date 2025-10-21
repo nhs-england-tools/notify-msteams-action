@@ -149,7 +149,7 @@ if [ -z "$REPO" ]; then
     if git rev-parse --git-dir > /dev/null 2>&1; then
         REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || echo "")
     fi
-    
+
     if [ -z "$REPO" ]; then
         print_error "Could not determine repository. Use --repo OWNER/REPO"
         exit 1

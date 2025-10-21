@@ -278,23 +278,23 @@ The publish workflow implements the following phases:
   run: |
     # Import the GPG signing key
     echo "$GPG_SIGNING_KEY" | gpg --batch --import
-    
+
     # Configure git identity (will show as GitHub App)
     git config --global user.name "notify-msteams-action release bot"
     git config --global user.email "noreply@github.com"
-    
+
     # Configure commit signing with custom GPG wrapper (from repository)
     git config --global user.signingkey "$GPG_KEY_ID"
     git config --global commit.gpgsign true
     git config --global tag.gpgSign true
     git config --global gpg.program "$GITHUB_WORKSPACE/scripts/gpg-wrapper.sh"
-    
+
     # Configure GPG for non-interactive mode
     mkdir -p ~/.gnupg
     echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
     echo 'allow-loopback-pinentry' >> ~/.gnupg/gpg-agent.conf || true
     chmod 700 ~/.gnupg
-    
+
     # Set GPG_TTY for terminal interaction
     export GPG_TTY=$(tty)
 
