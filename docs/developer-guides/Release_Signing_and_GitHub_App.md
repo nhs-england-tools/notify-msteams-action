@@ -1,9 +1,9 @@
 # Guide: Release Commit Signing with a GitHub App
 
-This guide describes a secure pattern for producing signed release commits and tags for this Action using GitHub App native commit signing:
+This guide describes a secure pattern for producing cryptographically signed release commits and tags for this Action using a GitHub App:
 
 1. A dedicated GitHub App (least privilege access token instead of the default workflow token).
-2. A GPG signing key registered directly with the GitHub App (not a user account) so commits show as **Verified** and are attributed to the App.
+2. A GPG signing key for cryptographic commit signatures that prove authenticity and integrity.
 3. A GPG wrapper script that enables non-interactive passphrase injection for fully automated CI/CD workflows.
 4. Rotation and revocation procedures that minimise exposure while preserving provenance.
 
@@ -18,8 +18,8 @@ It complements the existing documents:
 
 Component | Purpose
 ----------|--------
-GitHub App | Issues an installation token with only the required repository permissions (Contents, Issues, Pull requests) for semantic-release to push a release commit and create a tag and GitHub Release. Also provides the identity for commit attribution.
-GPG Signing Key (App) | A dedicated GPG key registered with the GitHub App for commit signing. Enables cryptographic signatures on release commits and tags so branch protection rules that require signed commits are satisfied.
+GitHub App | Issues an installation token with only the required repository permissions (Contents, Issues, Pull requests) for semantic-release to push a release commit and create a tag and GitHub Release. Provides the identity for commit attribution.
+GPG Signing Key | A dedicated GPG key for cryptographic commit and tag signing. Enables cryptographic signatures that prove authenticity and satisfy branch protection rules requiring signed commits.
 GPG Wrapper Script | A shell script that intercepts GPG calls and automatically injects the passphrase, enabling non-interactive commit signing in CI/CD pipelines.
 Workflow Logic | Obtains GitHub App installation token, imports GPG key, configures custom GPG wrapper, enables signing, runs semantic-release.
 
@@ -29,7 +29,7 @@ Release flow (simplified):
 2. Workflow obtains a GitHub App installation token via JWT authentication.
 3. Workflow imports GPG signing key and configures `git` to use custom GPG wrapper script.
 4. `semantic-release` computes next version, updates artefacts, creates signed commit and tag using the App token.
-5. GitHub UI shows commit and tag as **Verified** and attributed to the GitHub App.
+5. Commit and tag are cryptographically signed and pushed to the repository.
 
 ---
 
@@ -168,17 +168,37 @@ Storage recommendations:
 
 ---
 
-## 6. Add the Public GPG Key to the GitHub App
+## 6. Understanding GPG Signature Verification (Optional)
 
-**Critical difference from user-based signing:** The GPG key is registered with the GitHub App, not a user account.
+**Important**: This section explains signature verification in GitHub's UI. The GPG signing itself (cryptographic integrity) works without this step - you only need the private key stored in secrets (Section 7).
 
-1. Navigate to your GitHub App settings: Settings → Developer settings → GitHub Apps → [Your App].
-2. Scroll to **Optional features** section.
-3. Under **Commit signing**, click **Add a signing key**.
-4. Paste the contents of `public-release-key.asc`.
-5. Save the changes.
+### 6.1 Signature Verification Behavior
 
-Result: Commits signed with this key will show as **Verified** and attributed to the GitHub App (not an individual user).
+When commits are signed with a GPG key:
+
+- **Cryptographic signing works**: The commit will have a valid GPG signature that can be verified locally with `git verify-commit`.
+- **GitHub "Verified" badge**: For commits to show as "Verified" in GitHub's UI, the public key must be registered with a GitHub user account that matches the commit author email.
+
+### 6.2 Options for Verification Badge
+
+**Option A: No Verification Badge (Simplest)**
+
+Skip adding the public key to GitHub. Commits will be cryptographically signed and verifiable locally, but won't show the green "Verified" badge in GitHub's UI. This is sufficient for most use cases.
+
+**Option B: Verification via Bot User Account**
+
+If you want the "Verified" badge:
+
+1. Create a dedicated bot user account (e.g., `notify-msteams-action-bot`).
+2. Add the public GPG key (`public-release-key.asc`) to that user account: Settings → SSH and GPG keys → New GPG key.
+3. Ensure the git config email in your workflow (Section 8.1) matches a verified email address for that user account.
+4. Commits will show as "Verified" and attributed to the bot user.
+
+**Option C: Native GitHub App Signing (Advanced)**
+
+GitHub Apps can sign commits natively without external GPG keys, but this requires using GitHub's API directly rather than git commands. This is beyond the scope of this guide.
+
+**Recommendation**: Use Option A (no verification badge) unless your branch protection rules specifically require verified commits from a known identity.
 
 ---
 
@@ -190,18 +210,20 @@ The following secrets must be configured in Repository Settings → Secrets and 
 
 | Secret Name | Value | Purpose |
 |-------------|-------|---------|
-| `GITHUB_APP_ID` | GitHub App ID | Create installation token via JWT |
-| `GITHUB_APP_PRIVATE_KEY` | Contents of the `.pem` authentication key | Authenticate as App |
-| `GITHUB_APP_SIGNING_KEY_ID` | GPG key ID (e.g., `ABC123DEF456789A`) | Specify which key to use for signing |
-| `GITHUB_APP_SIGNING_KEY` | Contents of `private-release-key.asc` | Import for signing |
-| `GITHUB_APP_SIGNING_KEY_PASSPHRASE` | Passphrase string | Unlock key via GPG wrapper |
+| `APP_ID` | GitHub App ID | Create installation token via JWT |
+| `APP_PRIVATE_KEY` | Contents of the `.pem` authentication key | Authenticate as App |
+| `APP_SIGNING_KEY_ID` | GPG key ID (e.g., `ABC123DEF456789A`) | Specify which key to use for signing |
+| `APP_SIGNING_KEY` | Contents of `private-release-key.asc` | Import for signing |
+| `APP_SIGNING_KEY_PASSPHRASE` | Passphrase string | Unlock key via GPG wrapper |
 
 Optional secrets:
 
 | Secret Name | Value | Purpose |
 |-------------|-------|---------|
-| `GITHUB_APP_INSTALLATION_ID` | Installation ID | Some tooling needs explicit value |
-| `GPG_KEY_FPR` | Fingerprint | Audit / logging |
+| `APP_INSTALLATION_ID` | Installation ID | Some tooling needs explicit value |
+| `KEY_FPR` | Fingerprint | Audit / logging |
+
+> **Note**: Secret names cannot start with `GITHUB_` as this prefix is reserved by GitHub for system variables.
 
 Consider using an **Environment** with required reviewers for additional control if higher assurance is needed.
 
@@ -269,28 +291,28 @@ The publish workflow implements the following phases:
   uses: actions/create-github-app-token@v1
   id: app-token
   with:
-    app-id: ${{ secrets.GITHUB_APP_ID }}
-    private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
+    app-id: ${{ secrets.APP_ID }}
+    private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
 - name: Import GPG key and configure signing
   env:
-    GPG_SIGNING_KEY: ${{ secrets.GITHUB_APP_SIGNING_KEY }}
-    GPG_KEY_ID: ${{ secrets.GITHUB_APP_SIGNING_KEY_ID }}
-    GITHUB_APP_SIGNING_KEY_PASSPHRASE: ${{ secrets.GITHUB_APP_SIGNING_KEY_PASSPHRASE }}
+    APP_SIGNING_KEY: ${{ secrets.APP_SIGNING_KEY }}
+    GPG_KEY_ID: ${{ secrets.APP_SIGNING_KEY_ID }}
+    APP_SIGNING_KEY_PASSPHRASE: ${{ secrets.APP_SIGNING_KEY_PASSPHRASE }}
   run: |
     # Import the GPG signing key
-    echo "$GPG_SIGNING_KEY" | gpg --batch --import
-
+    echo "$APP_SIGNING_KEY" | gpg --batch --import
+    
     # Configure git identity (will show as GitHub App)
     git config --global user.name "notify-msteams-action release bot"
     git config --global user.email "noreply@github.com"
-
+    
     # Configure commit signing with custom GPG wrapper (from repository)
     git config --global user.signingkey "$GPG_KEY_ID"
     git config --global commit.gpgsign true
     git config --global tag.gpgSign true
     git config --global gpg.program "$GITHUB_WORKSPACE/scripts/gpg-wrapper.sh"
-
+    
     # Configure GPG for non-interactive mode
     mkdir -p ~/.gnupg
     echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
@@ -298,9 +320,7 @@ The publish workflow implements the following phases:
     chmod 700 ~/.gnupg
 
     # Set GPG_TTY for terminal interaction
-    export GPG_TTY=$(tty)
-
-- name: Semantic Release
+    export GPG_TTY=$(tty)- name: Semantic Release
   uses: cycjimmy/semantic-release-action@v4.1.1
   env:
     GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -311,7 +331,7 @@ The publish workflow implements the following phases:
 The GPG wrapper script (`scripts/gpg-wrapper.sh`) is committed to the repository and intercepts all GPG calls from git to automatically inject the passphrase:
 
 - **Key insight**: `git config gpg.program $GITHUB_WORKSPACE/scripts/gpg-wrapper.sh` redirects all GPG operations through the custom script.
-- The wrapper calls `gpg --batch --pinentry-mode=loopback --passphrase "$GITHUB_APP_SIGNING_KEY_PASSPHRASE"` with all original arguments.
+- The wrapper calls `gpg --batch --pinentry-mode=loopback --passphrase "$APP_SIGNING_KEY_PASSPHRASE"` with all original arguments.
 - This enables fully automated, non-interactive commit signing without user prompts.
 - The script is version-controlled, making it easier to maintain, test, and audit.
 
@@ -328,8 +348,7 @@ The commit and tag produced by semantic-release will now:
 
 After a publish completes:
 
-1. Inspect the release commit in the GitHub UI → should display **Verified** with the GitHub App as the committer.
-2. Locally verify the signature (optional):
+1. Locally verify the cryptographic signature:
 
    ```bash
    git fetch --tags origin
@@ -337,13 +356,17 @@ After a publish completes:
    git verify-tag vX.Y.Z
    ```
 
-If not verified:
+   You should see output like `Good signature from "notify-msteams-action release bot <noreply@github.com>"`.
 
-- Ensure the public GPG key was added to the GitHub App settings (not a user account).
+2. Optionally check GitHub UI for verification badge (only if you completed Section 6.2 Option B).
+
+If the signature verification fails:
+
 - Confirm the workflow logs show successful key import and signing configuration.
 - Verify the GPG wrapper script was created and configured correctly.
 - Check that `git config gpg.program` points to the wrapper script.
 - Ensure the passphrase secret is correct and accessible.
+- Import the public key locally to verify: `gpg --import public-release-key.asc`
 
 ---
 
@@ -353,9 +376,7 @@ Rotate at least every 6–12 months or on suspicion of compromise.
 
 1. Generate new GPG key (repeat Section 4) with new expiration and passphrase.
 2. Export the new public and private keys (Section 5).
-3. Add the new public key to the GitHub App settings *before* changing secrets:
-   - Navigate to GitHub App → Optional features → Commit signing
-   - Add the new signing key (you can have multiple keys during transition)
+3. If you are using a bot user account for verification (Section 6.2 Option B), add the new public key to that account before changing secrets.
 4. Update repository secrets with new values using the helper script:
 
    ```bash
@@ -368,11 +389,11 @@ Rotate at least every 6–12 months or on suspicion of compromise.
    ```
 
    Or manually update these secrets in the repository settings:
-   - `GITHUB_APP_SIGNING_KEY_ID`: New key ID
-   - `GITHUB_APP_SIGNING_KEY`: New private key content
-   - `GITHUB_APP_SIGNING_KEY_PASSPHRASE`: New passphrase
-5. Trigger a release; confirm **Verified** with new key.
-6. After validation, remove the old public key from GitHub App settings.
+   - `APP_SIGNING_KEY_ID`: New key ID
+   - `APP_SIGNING_KEY`: New private key content
+   - `APP_SIGNING_KEY_PASSPHRASE`: New passphrase
+5. Trigger a release; verify signature locally with `git show --show-signature`.
+6. If using a bot user account (Section 6.2 Option B), remove the old public key from that account after validation.
 7. Securely destroy old private key material and revocation certificate.
 8. Generate new revocation certificate for the new key and store offline.
 
@@ -393,14 +414,14 @@ If the private key is believed compromised:
    gpg --list-keys --with-colons | grep '^rev' || echo "Revocation not applied"
    ```
 
-2. Publish the updated (revoked) public key to a keyserver if you use them (optional; GitHub relies on its stored copy).
-3. **Immediately remove the compromised key from the GitHub App**:
-   - Navigate to GitHub App → Optional features → Commit signing
-   - Delete the compromised signing key
+2. Publish the updated (revoked) public key to a keyserver if you use them (optional).
+3. **If using a bot user account (Section 6.2 Option B), immediately remove the compromised key**:
+   - Navigate to the bot user account → Settings → SSH and GPG keys
+   - Delete the compromised GPG key
 4. Remove the compromised secrets from the repository settings:
-   - Delete `GITHUB_APP_SIGNING_KEY`
-   - Delete `GITHUB_APP_SIGNING_KEY_PASSPHRASE`
-   - Delete `GITHUB_APP_SIGNING_KEY_ID`
+   - Delete `APP_SIGNING_KEY`
+   - Delete `APP_SIGNING_KEY_PASSPHRASE`
+   - Delete `APP_SIGNING_KEY_ID`
 5. Generate and register a new key (Sections 4–6).
 6. Update secrets with the new key and passphrase.
 7. Disable the publish workflow temporarily to prevent unsigned commits.
@@ -429,10 +450,10 @@ Subkeys (Advanced) | Create a primary (certify-only) key offline and a signing s
 
 Symptom | Likely Cause | Resolution
 --------|--------------|-----------
-Commit not Verified | GPG key not registered with GitHub App | Add public key to GitHub App → Optional features → Commit signing
+Commit not Verified in GitHub UI | GPG public key not registered with a GitHub user account | See Section 6.2 for options; verification badge is optional
 Unsigned commit | Missing key import or signing disabled | Inspect workflow logs; ensure `commit.gpgsign true` and key imported
 Bad signature error | Corrupted key or wrong passphrase | Re-import key; verify passphrase secret content; check wrapper script
-GPG passphrase prompt | Wrapper script not configured | Ensure `git config gpg.program` points to `scripts/gpg-wrapper.sh`; verify `GITHUB_APP_SIGNING_KEY_PASSPHRASE` environment variable is set
+GPG passphrase prompt | Wrapper script not configured | Ensure `git config gpg.program` points to `scripts/gpg-wrapper.sh`; verify `APP_SIGNING_KEY_PASSPHRASE` environment variable is set
 Tag unsigned | `tag.gpgSign` not set | Add `git config --global tag.gpgSign true`
 App token push denied | Missing Contents write permission | Update App permissions and reinstall
 Wrapper script not found | Incorrect path or permissions | Verify `scripts/gpg-wrapper.sh` exists and is executable (`chmod +x`)
@@ -442,13 +463,13 @@ GPG agent errors | Agent not configured for loopback | Add `pinentry-mode loopba
 
 ## 14. Optional Enhancements
 
-- Add a guard step that fails if `GITHUB_APP_SIGNING_KEY` is empty while branch protection requires signed commits:
+- Add a guard step that fails if `APP_SIGNING_KEY` is empty while branch protection requires signed commits:
 
   ```yaml
   - name: Verify signing secrets exist
     run: |
-      if [ -z "${{ secrets.GITHUB_APP_SIGNING_KEY }}" ]; then
-        echo "Error: GITHUB_APP_SIGNING_KEY secret is not configured"
+      if [ -z "${{ secrets.APP_SIGNING_KEY }}" ]; then
+        echo "Error: APP_SIGNING_KEY secret is not configured"
         exit 1
       fi
   ```
@@ -474,9 +495,9 @@ GPG agent errors | Agent not configured for loopback | Add `pinentry-mode loopba
 Using GitHub App native commit signing with a GPG wrapper script yields:
 
 1. **Fully automated**: No manual intervention required; fully non-interactive workflow.
-2. **Verified commits**: All commits show as "Verified" on GitHub and attributed to the GitHub App.
+2. **Cryptographically signed**: All commits are cryptographically signed and verifiable with GPG.
 3. **Minimal access token scope**: App tokens are scoped to specific repositories with least-privilege permissions.
-4. **Cryptographically verifiable provenance**: Release artefacts (`dist/`, `package.json` changes, `VERSION`) have strong cryptographic signatures.
+4. **Verifiable provenance**: Release artefacts (`dist/`, `package.json` changes, `VERSION`) have strong cryptographic signatures that prove authenticity.
 5. **Clear attribution**: Commits are attributed to the GitHub App, not an individual user account.
 6. **Traceable**: GitHub App activity is logged and traceable.
 7. **Secure**: Uses short-lived tokens and proper passphrase management.

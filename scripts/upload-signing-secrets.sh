@@ -217,11 +217,11 @@ echo "  Repository: $REPO"
 if [ -n "$ENVIRONMENT" ]; then
     echo "  Environment: $ENVIRONMENT"
 fi
-echo "  GITHUB_APP_ID: $APP_ID"
-echo "  GITHUB_APP_PRIVATE_KEY: (from $APP_PRIVATE_KEY_FILE, $(wc -l < "$APP_PRIVATE_KEY_FILE") lines)"
-echo "  GITHUB_APP_SIGNING_KEY_ID: $SIGNING_KEY_ID"
-echo "  GITHUB_APP_SIGNING_KEY: (from $SIGNING_KEY_FILE, $(wc -l < "$SIGNING_KEY_FILE") lines)"
-echo "  GITHUB_APP_SIGNING_KEY_PASSPHRASE: ********"
+echo "  APP_ID: $APP_ID"
+echo "  APP_PRIVATE_KEY: (from $APP_PRIVATE_KEY_FILE, $(wc -l < "$APP_PRIVATE_KEY_FILE") lines)"
+echo "  APP_SIGNING_KEY_ID: $SIGNING_KEY_ID"
+echo "  APP_SIGNING_KEY: (from $SIGNING_KEY_FILE, $(wc -l < "$SIGNING_KEY_FILE") lines)"
+echo "  APP_SIGNING_KEY_PASSPHRASE: ********"
 echo
 
 if [ "$DRY_RUN" = true ]; then
@@ -247,20 +247,20 @@ fi
 # Upload secrets
 print_info "Uploading secrets..."
 
-echo "$APP_ID" | $SECRET_CMD GITHUB_APP_ID
-print_success "Uploaded GITHUB_APP_ID"
+echo "$APP_ID" | $SECRET_CMD APP_ID
+print_success "Uploaded APP_ID"
 
-echo "$APP_PRIVATE_KEY_CONTENT" | $SECRET_CMD GITHUB_APP_PRIVATE_KEY
-print_success "Uploaded GITHUB_APP_PRIVATE_KEY"
+echo "$APP_PRIVATE_KEY_CONTENT" | $SECRET_CMD APP_PRIVATE_KEY
+print_success "Uploaded APP_PRIVATE_KEY"
 
-echo "$SIGNING_KEY_ID" | $SECRET_CMD GITHUB_APP_SIGNING_KEY_ID
-print_success "Uploaded GITHUB_APP_SIGNING_KEY_ID"
+echo "$SIGNING_KEY_ID" | $SECRET_CMD APP_SIGNING_KEY_ID
+print_success "Uploaded APP_SIGNING_KEY_ID"
 
-echo "$SIGNING_KEY_CONTENT" | $SECRET_CMD GITHUB_APP_SIGNING_KEY
-print_success "Uploaded GITHUB_APP_SIGNING_KEY"
+echo "$SIGNING_KEY_CONTENT" | $SECRET_CMD APP_SIGNING_KEY
+print_success "Uploaded APP_SIGNING_KEY"
 
-echo "$SIGNING_KEY_PASSPHRASE" | $SECRET_CMD GITHUB_APP_SIGNING_KEY_PASSPHRASE
-print_success "Uploaded GITHUB_APP_SIGNING_KEY_PASSPHRASE"
+echo "$SIGNING_KEY_PASSPHRASE" | $SECRET_CMD APP_SIGNING_KEY_PASSPHRASE
+print_success "Uploaded APP_SIGNING_KEY_PASSPHRASE"
 
 echo
 print_success "All secrets uploaded successfully to $REPO"
