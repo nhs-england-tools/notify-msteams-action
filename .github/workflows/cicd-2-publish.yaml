@@ -6,6 +6,11 @@ on:
     branches: [ "main" ]
     types: ["completed"]
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   metadata:
     name: "Set CI/CD metadata"
@@ -50,13 +55,77 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Generate GitHub App token"
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: "Import GPG key and configure signing"
+        if: ${{ secrets.APP_SIGNING_KEY != '' }}
+        env:
+          APP_SIGNING_KEY: ${{ secrets.APP_SIGNING_KEY }}
+          GPG_KEY_ID: ${{ secrets.APP_SIGNING_KEY_ID }}
+          APP_SIGNING_KEY_PASSPHRASE: ${{ secrets.APP_SIGNING_KEY_PASSPHRASE }}
+        run: |
+          # Import the GPG signing key
+          echo "$APP_SIGNING_KEY" | gpg --batch --import
+
+          # Mark repository as safe (defensive measure for git operations)
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+          # Configure git identity (will show as GitHub App)
+          git config --global user.name "notify-msteams-action release bot"
+          git config --global user.email "noreply@github.com"
+
+          # Configure commit signing with custom GPG wrapper (from repository)
+          git config --global user.signingkey "$GPG_KEY_ID"
+          git config --global commit.gpgsign true
+          git config --global tag.gpgSign true
+          git config --global gpg.program "$GITHUB_WORKSPACE/scripts/gpg-wrapper.sh"
+
+          # Configure GPG for non-interactive mode
+          mkdir -p ~/.gnupg
+          echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
+          echo 'allow-loopback-pinentry' >> ~/.gnupg/gpg-agent.conf || true
+          chmod 700 ~/.gnupg
+
+          # Set GPG_TTY for terminal interaction
+          export GPG_TTY=$(tty)
+
+          # Log key fingerprint for audit (not the key itself)
+          gpg --list-keys --with-colons | awk -F: '/^fpr/ {print "Using GPG key: " $10; exit}'
+      - name: "Set up Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+          cache: npm
+      - name: "Install dependencies"
+        run: npm ci
+      - name: "Build action bundle"
+        run: npm run package
       - name: "Semantic Release"
         uses: cycjimmy/semantic-release-action@v4.1.1
         id: semantic
         with:
           dry_run: ${{github.event_name == 'pull_request'}}
+          extra_plugins: |
+            @semantic-release/git
+            @semantic-release/npm
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+      - name: "Update major tag"
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: |
+          version="${{ steps.semantic.outputs.new_release_version }}"
+          major_tag="v${version%%.*}"
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git fetch --tags origin
+          git tag -f "${major_tag}" "v${version}"
+          git push origin -f "${major_tag}"
       - name: "Output new release details"
         if: steps.semantic.outputs.new_release_published == 'true'
         run: |
