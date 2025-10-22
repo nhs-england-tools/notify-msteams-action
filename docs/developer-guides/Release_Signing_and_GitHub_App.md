@@ -181,20 +181,20 @@ When commits are signed with a GPG key:
 
 ### 6.2 Options for Verification Badge
 
-**Option A: No Verification Badge (Simplest)**
+#### Option A: No Verification Badge (Simplest)
 
 Skip adding the public key to GitHub. Commits will be cryptographically signed and verifiable locally, but won't show the green "Verified" badge in GitHub's UI. This is sufficient for most use cases.
 
-**Option B: Verification via Bot User Account**
+#### Option B: Verification via bot User Account
 
 If you want the "Verified" badge:
 
 1. Create a dedicated bot user account (e.g., `notify-msteams-action-bot`).
 2. Add the public GPG key (`public-release-key.asc`) to that user account: Settings → SSH and GPG keys → New GPG key.
-3. Ensure the git config email in your workflow (Section 8.1) matches a verified email address for that user account.
+3. Ensure the git configuration email in your workflow (Section 8.1) matches a verified email address for that user account.
 4. Commits will show as "Verified" and attributed to the bot user.
 
-**Option C: Native GitHub App Signing (Advanced)**
+#### Option C: Native GitHub App Signing (Advanced)
 
 GitHub Apps can sign commits natively without external GPG keys, but this requires using GitHub's API directly rather than git commands. This is beyond the scope of this guide.
 
@@ -302,17 +302,17 @@ The publish workflow implements the following phases:
   run: |
     # Import the GPG signing key
     echo "$APP_SIGNING_KEY" | gpg --batch --import
-    
+
     # Configure git identity (will show as GitHub App)
     git config --global user.name "notify-msteams-action release bot"
     git config --global user.email "noreply@github.com"
-    
+
     # Configure commit signing with custom GPG wrapper (from repository)
     git config --global user.signingkey "$GPG_KEY_ID"
     git config --global commit.gpgsign true
     git config --global tag.gpgSign true
     git config --global gpg.program "$GITHUB_WORKSPACE/scripts/gpg-wrapper.sh"
-    
+
     # Configure GPG for non-interactive mode
     mkdir -p ~/.gnupg
     echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
