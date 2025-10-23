@@ -143,7 +143,7 @@ Record:
 ## 5. Export Keys and Create Revocation Certificate
 
 ```bash
-KEY_ID="ABC123DEF456789A"  # Replace with your key ID
+KEY_ID="YOUR_KEY_ID_HERE"  # Replace with your actual GPG key ID
 FPR="<REPLACE_WITH_FULL_FINGERPRINT>"
 
 # Public key (for GitHub App)

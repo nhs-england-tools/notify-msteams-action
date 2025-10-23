@@ -16,10 +16,14 @@ regexes = [
 ]
 
 [allowlist]
+description = "Global allowlist for false positives"
 paths = [
   '''dist/index.js.map''',
   '''dist/index.js''',
   '''.terraform.lock.hcl''',
   '''poetry.lock''',
   '''yarn.lock''',
+]
+regexes = [
+  '''KEY_ID="[A-Z0-9_]+".*Replace with''',  # Documentation placeholders for GPG key IDs
 ]
