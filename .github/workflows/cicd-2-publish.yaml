@@ -34,7 +34,7 @@ jobs:
           echo "build_timestamp=$(date --date=$datetime -u +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
           echo "build_epoch=$(date --date=$datetime -u +'%s')" >> $GITHUB_OUTPUT
           echo "nodejs_version=$(grep "^nodejs" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-          echo "python_version=$(grep "^nodejs" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
+          echo "python_version=$(grep "^python" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
           echo "terraform_version=$(grep "^terraform" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
       - name: "List variables"
         run: |
@@ -64,7 +64,8 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: "Import GPG key and configure signing"
-        if: ${{ secrets.APP_SIGNING_KEY != '' }}
+        # Use env context for conditional check; secrets context not available in 'if' here without proper expression parsing.
+        if: ${{ env.APP_SIGNING_KEY != '' }}
         env:
           APP_SIGNING_KEY: ${{ secrets.APP_SIGNING_KEY }}
           GPG_KEY_ID: ${{ secrets.APP_SIGNING_KEY_ID }}
