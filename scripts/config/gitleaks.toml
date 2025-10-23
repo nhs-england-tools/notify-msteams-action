@@ -16,10 +16,14 @@ regexes = [
 ]
 
 [allowlist]
+description = "Global allowlist for false positives"
 paths = [
   '''dist/index.js.map''',
   '''dist/index.js''',
   '''.terraform.lock.hcl''',
   '''poetry.lock''',
   '''yarn.lock''',
+]
+stopwords = [
+  '''ABC123DEF456789A''',  # Documentation placeholder for GPG key ID
 ]
