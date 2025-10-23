@@ -24,6 +24,6 @@ paths = [
   '''poetry.lock''',
   '''yarn.lock''',
 ]
-regexes = [
-  '''KEY_ID="[A-Z0-9_]+".*Replace with''',  # Documentation placeholders for GPG key IDs
+stopwords = [
+  '''ABC123DEF456789A''',  # Documentation placeholder for GPG key ID
 ]
