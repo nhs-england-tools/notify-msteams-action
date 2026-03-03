@@ -122,22 +122,31 @@ jobs:
 
           head_oid=$(git rev-parse HEAD)
 
-          # Build the file changes JSON array
-          file_changes='[]'
+          # Build the file changes JSON array using temp files to avoid
+          # "Argument list too long" errors with large files such as dist/index.js
+          tmp_changes=$(mktemp)
+          echo '[]' > "$tmp_changes"
           while IFS= read -r file; do
             if [ -f "$file" ]; then
-              contents=$(base64 -w 0 < "$file")
-              file_changes=$(echo "$file_changes" | jq --arg path "$file" --arg contents "$contents" '. + [{"path": $path, "contents": $contents}]')
+              tmp_b64=$(mktemp)
+              base64 -w 0 < "$file" > "$tmp_b64"
+              tmp_out=$(mktemp)
+              jq --arg path "$file" --rawfile contents "$tmp_b64" \
+                '. + [{"path": $path, "contents": $contents}]' \
+                "$tmp_changes" > "$tmp_out"
+              mv "$tmp_out" "$tmp_changes"
+              rm -f "$tmp_b64"
             fi
           done < <(git diff --cached --name-only)
 
-          # Single GraphQL mutation to create the commit and update the branch
-          gh api graphql -f query='
-            mutation($githubRepository: String!, $branchName: String!, $headOid: GitObjectID!, $message: String!, $fileChanges: FileChanges!) {
+          # Build the complete GraphQL request body as a file to avoid
+          # passing large content through shell arguments
+          tmp_request=$(mktemp)
+          gql_query='mutation($githubRepository: String!, $branchName: String!, $headOid: GitObjectID!, $message: String!, $fileChanges: FileChanges!) {
               createCommitOnBranch(input: {
                 branch: {
-                  repositoryNameWithOwner: $repoOwner
-                  branchName: $repoName
+                  repositoryNameWithOwner: $githubRepository
+                  branchName: $branchName
                 }
                 expectedHeadOid: $headOid
                 message: {
@@ -150,13 +159,32 @@ jobs:
                   url
                 }
               }
-            }
-          ' \
-            -f githubRepository="${repo_name_w_owner}" \
-            -f branchName="${branch_name}" \
-            -f headOid="${head_oid}" \
-            -f message="chore: update dist" \
-            -F fileChanges="$(jq -nc --argjson additions "$file_changes" '{additions: $additions}')"
+            }'
+
+          jq -nc \
+            --arg query "$gql_query" \
+            --arg githubRepository "${repo_name_w_owner}" \
+            --arg branchName "${branch_name}" \
+            --arg headOid "${head_oid}" \
+            --arg message "chore: update dist" \
+            --slurpfile additions "$tmp_changes" \
+            '{
+              query: $query,
+              variables: {
+                githubRepository: $githubRepository,
+                branchName: $branchName,
+                headOid: $headOid,
+                message: $message,
+                fileChanges: { additions: $additions[0] }
+              }
+            }' > "$tmp_request"
+
+          rm -f "$tmp_changes"
+
+          # Single GraphQL mutation to create the commit and update the branch
+          gh api graphql --input "$tmp_request"
+
+          rm -f "$tmp_request"
 
       - name: 'List variables'
         run: |
