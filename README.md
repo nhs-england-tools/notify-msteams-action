@@ -2,7 +2,7 @@
 
 This GitHub action is designed to enable development teams to easily send notifications to an MS Teams channel from their build pipelines.
 
-This action uses typescript and is built from the [typescript-action](https://github.com/actions/typescript-action) baseline
+This action uses typescript and is built from the [typescript-action](https://github.com/actions/typescript-action) baseline.
 
 ## Table of Contents
 
