@@ -68,16 +68,13 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: 'Mask GitHub App token'
         run: echo "::add-mask::${{ steps.app-token.outputs.token }}"
-        # - name: 'Semantic Release'
-        #   uses: cycjimmy/semantic-release-action@v4.1.1
-        #   id: semantic
-        #   with:
-        #     dry_run: true
-        #     extra_plugins: |
-        #       @semantic-release/git
-        #       @semantic-release/npm
-        # env:
-        #   GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+      - name: 'Semantic Release'
+        uses: cycjimmy/semantic-release-action@v4.1.1
+        id: semantic
+        with:
+          dry_run: true
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
       - name: 'Set CI/CD variables'
         id: variables
         run: |
@@ -105,11 +102,6 @@ jobs:
             echo "Pull request doesn't exist"
             echo "does_pull_request_exist=false" >> $GITHUB_OUTPUT
           fi
-      - name: commit dist changes if pull request exists
-        if: steps.pr_exists.outputs.does_pull_request_exist == 'true'
-        uses: ./.github/actions/commit-release-files
-        with:
-          github_token: ${{ steps.app-token.outputs.token }}
 
       - name: 'List variables'
         run: |
