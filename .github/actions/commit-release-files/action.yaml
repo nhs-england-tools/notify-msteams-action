@@ -23,7 +23,7 @@ runs:
         repo_name_w_owner="${GITHUB_REPOSITORY}"
         commit_message="${{ inputs.commit_message }}"
 
-        git add dist/ || true
+        git add -f dist/ || true
         git add CHANGELOG.md || true
         git add package.json || true
         git add package-lock.json || true
