@@ -1,0 +1,34 @@
+name: 'Update the floating major tag'
+description: 'Use this action to update the floating major tag to point to the latest release when a new minor or patch release is published'
+inputs:
+  github_token:
+    description: 'Token'
+    required: true
+  full_release_version:
+    description: 'The new release version that was published'
+    required: true
+  major_release_version:
+    description: 'The major version of the new release that was published'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Mask GitHub token'
+      shell: bash
+      run: echo "::add-mask::${{ inputs.github_token }}"
+    - name: 'Update major tag'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        full_tag="v${{ inputs.full_release_version }}"
+        major_tag="v${{ inputs.major_release_version }}"
+
+        # Resolve the SHA the full semver tag points to
+        tag_sha=$(gh api repos/${{ github.repository }}/git/ref/tags/${full_tag} --jq '.object.sha')
+
+        # Delete existing major tag ref if present
+        gh api --method DELETE repos/${{ github.repository }}/git/refs/tags/${major_tag} || true
+
+        # Create the floating major tag pointing to the same SHA as the full semver tag. Marked as verified
+        gh api --method POST repos/${{ github.repository }}/git/refs -f ref="refs/tags/${major_tag}" -f sha="${tag_sha}"

@@ -1,10 +1,10 @@
-name: "CI/CD publish"
+name: 'CI/CD publish'
 
 on:
   workflow_run:
-    workflows: ["CI/CD pull request"]
-    branches: [ "main" ]
-    types: ["completed"]
+    workflows: ['CI/CD pull request']
+    branches: ['main']
+    types: ['completed']
 
 permissions:
   contents: write
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   metadata:
-    name: "Set CI/CD metadata"
+    name: 'Set CI/CD metadata'
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
@@ -24,9 +24,9 @@ jobs:
       python_version: ${{ steps.variables.outputs.python_version }}
       terraform_version: ${{ steps.variables.outputs.terraform_version }}
     steps:
-      - name: "Checkout code"
+      - name: 'Checkout code'
         uses: actions/checkout@v4
-      - name: "Set CI/CD variables"
+      - name: 'Set CI/CD variables'
         id: variables
         run: |
           datetime=$(date -u +'%Y-%m-%dT%H:%M:%S%z')
@@ -36,7 +36,7 @@ jobs:
           echo "nodejs_version=$(grep "^nodejs" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
           echo "python_version=$(grep "^python" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
           echo "terraform_version=$(grep "^terraform" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-      - name: "List variables"
+      - name: 'List variables'
         run: |
           export BUILD_DATETIME="${{ steps.variables.outputs.build_datetime }}"
           export BUILD_TIMESTAMP="${{ steps.variables.outputs.build_timestamp }}"
@@ -46,93 +46,57 @@ jobs:
           export TERRAFORM_VERSION="${{ steps.variables.outputs.terraform_version }}"
           make list-variables
   publish:
-    name: "Publish packages"
+    name: 'Publish packages'
     runs-on: ubuntu-latest
     needs: [metadata]
     timeout-minutes: 3
     outputs:
       version: ${{ steps.semantic.outputs.new_release_version }}
     steps:
-      - name: "Checkout code"
+      - name: 'Checkout code'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: "Generate GitHub App token"
+      - name: 'Generate GitHub App token'
         uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
         id: app-token
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-      - name: "Mask GitHub App token"
+      - name: 'Mask GitHub App token'
         run: echo "::add-mask::${{ steps.app-token.outputs.token }}"
-      - name: "Import GPG key and configure signing"
-        # Use env context for conditional check; secrets context not available in 'if' here without proper expression parsing.
-        if: ${{ env.APP_SIGNING_KEY != '' }}
-        env:
-          APP_SIGNING_KEY: ${{ secrets.APP_SIGNING_KEY }}
-          GPG_KEY_ID: ${{ secrets.APP_SIGNING_KEY_ID }}
-          APP_SIGNING_KEY_PASSPHRASE: ${{ secrets.APP_SIGNING_KEY_PASSPHRASE }}
-        run: |
-          # Import the GPG signing key
-          echo "$APP_SIGNING_KEY" | gpg --batch --import
 
-          # Mark repository as safe (defensive measure for git operations)
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
-          # Configure git identity (will show as GitHub App)
-          git config --global user.name "notify-msteams-action release bot"
-          git config --global user.email "noreply@github.com"
-
-          # Configure commit signing with custom GPG wrapper (from repository)
-          git config --global user.signingkey "$GPG_KEY_ID"
-          git config --global commit.gpgsign true
-          git config --global tag.gpgSign true
-          git config --global gpg.program "$GITHUB_WORKSPACE/scripts/gpg-wrapper.sh"
-
-          # Configure GPG for non-interactive mode
-          mkdir -p ~/.gnupg
-          echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
-          echo 'allow-loopback-pinentry' >> ~/.gnupg/gpg-agent.conf || true
-          chmod 700 ~/.gnupg
-
-          # Set GPG_TTY for terminal interaction
-          export GPG_TTY=$(tty)
-
-          # Log key fingerprint for audit (not the key itself)
-          gpg --list-keys --with-colons | awk -F: '/^fpr/ {print "Using GPG key: " $10; exit}'
-      - name: "Set up Node.js"
+      - name: 'Set up Node.js'
         uses: actions/setup-node@v4
         with:
           node-version: 16
           cache: npm
-      - name: "Install dependencies"
+      - name: 'Install dependencies'
         run: npm ci
-      - name: "Build action bundle"
+      - name: 'Build action bundle'
         run: npm run package
-      - name: "Semantic Release"
+
+      - name: 'Semantic Release'
         uses: cycjimmy/semantic-release-action@v4.1.1
         id: semantic
         with:
           dry_run: ${{github.event_name == 'pull_request'}}
-          extra_plugins: |
-            @semantic-release/git
-            @semantic-release/npm
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          APP_SIGNING_KEY_PASSPHRASE: ${{ secrets.APP_SIGNING_KEY_PASSPHRASE }}
-      - name: "Update major tag"
+      - name: 'Commit release files'
         if: steps.semantic.outputs.new_release_published == 'true'
-        env:
-          APP_SIGNING_KEY_PASSPHRASE: ${{ secrets.APP_SIGNING_KEY_PASSPHRASE }}
-        run: |
-          version="${{ steps.semantic.outputs.new_release_version }}"
-          major_tag="v${version%%.*}"
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          git fetch --tags origin
-          git tag -f "${major_tag}" "v${version}"
-          git push origin -f "${major_tag}"
-      - name: "Output new release details"
+        uses: ./.github/actions/commit-release-files
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
+          commit_message: 'chore(release): v${{ steps.semantic.outputs.new_release_version }}'
+      - name: 'Update major tag'
+        if: steps.semantic.outputs.new_release_published == 'true'
+        uses: ./.github/actions/update-major-tag
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
+          full_release_version: ${{ steps.semantic.outputs.new_release_version }}
+          major_release_version: ${{ steps.semantic.outputs.new_release_major_version }}
+      - name: 'Output new release details'
         if: steps.semantic.outputs.new_release_published == 'true'
         run: |
           echo ${{ steps.semantic.outputs.new_release_version }}
@@ -142,19 +106,19 @@ jobs:
           export VERSION="${{ steps.semantic.outputs.new_release_version }}"
           make list-variables
   success:
-    name: "Success notification"
+    name: 'Success notification'
     runs-on: ubuntu-latest
     needs: [publish]
     steps:
-      - name: "Check prerequisites for notification"
+      - name: 'Check prerequisites for notification'
         id: check
         run: echo "secret_exist=${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL != '' }}" >> $GITHUB_OUTPUT
-      - name: "Notify on publishing packages"
+      - name: 'Notify on publishing packages'
         if: steps.check.outputs.secret_exist == 'true'
         uses: nhs-england-tools/notify-msteams-action@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           teams-webhook-url: ${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL }}
-          message-title: "nhs-england-tools/notify-msteams-action@v${{ needs.metadata.outputs.version }}"
-          message-text: "A new version of this GitHub action has just been published."
-          link: ${{ github.event.pull_request.html_url }}
+          message-title: 'nhs-england-tools/notify-msteams-action@v${{ needs.publish.outputs.version }}'
+          message-text: 'A new version of this GitHub action has just been published.'
+          link: ${{ github.repositoryUrl }}/releases/tag/v${{ needs.publish.outputs.version }}
