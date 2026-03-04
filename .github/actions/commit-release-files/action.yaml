@@ -4,6 +4,10 @@ inputs:
   github_token:
     description: 'Token'
     required: true
+  commit_message:
+    description: 'The commit message to use when committing the release files'
+    required: false
+    default: 'chore(release)'
 runs:
   using: 'composite'
   steps:
@@ -17,14 +21,14 @@ runs:
       run: |
         branch_name=${GITHUB_REF_NAME}
         repo_name_w_owner="${GITHUB_REPOSITORY}"
-
-        # TODO add other files like changelog and package.json
-        git add dist/
+        commit_message="${{ inputs.commit_message }}"
 
         if git diff --cached --quiet; then
           echo "No changes to commit"
           exit 0
         fi
+
+        git add dist/ CHANGELOG.md package.json package-lock.json licenses.txt VERSION || true
 
         head_oid=$(git rev-parse HEAD)
 
@@ -68,7 +72,7 @@ runs:
           --arg githubRepository "${repo_name_w_owner}" \
           --arg branchName "${branch_name}" \
           --arg headOid "${head_oid}" \
-          --arg message "chore: update dist" \
+          --arg message "${commit_message}" \
           --slurpfile additions "$tmp_changes" \
           '{
             query: $query,
