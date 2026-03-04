@@ -23,12 +23,12 @@ runs:
         repo_name_w_owner="${GITHUB_REPOSITORY}"
         commit_message="${{ inputs.commit_message }}"
 
+        git add dist/ CHANGELOG.md package.json package-lock.json licenses.txt VERSION || true
+
         if git diff --cached --quiet; then
           echo "No changes to commit"
           exit 0
         fi
-
-        git add dist/ CHANGELOG.md package.json package-lock.json licenses.txt VERSION || true
 
         head_oid=$(git rev-parse HEAD)
 
