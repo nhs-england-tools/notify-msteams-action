@@ -1,7 +1,7 @@
 {
   "branches": [
     "main",
-    "refs/pull/243/merge"
+    "pull/243/merge"
   ],
   "tagFormat": "v${version}",
   "plugins": [
