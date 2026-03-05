@@ -1,7 +1,7 @@
 {
   "branches": [
     "main",
-    "hifa1-fix-release-5"
+    "refs/pull/243/merge"
   ],
   "tagFormat": "v${version}",
   "plugins": [
