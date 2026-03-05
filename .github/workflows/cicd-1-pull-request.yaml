@@ -3,11 +3,8 @@ name: 'CI/CD pull request'
 # The total recommended execution time for the "CI/CD Pull Request" workflow is around 20 minutes.
 
 on:
-  push:
-    branches:
-      - '**'
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: read
@@ -73,8 +70,13 @@ jobs:
         id: semantic
         with:
           dry_run: true
+          ci: false
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+      - name: output new release version
+        run: |
+          echo "New release version (dry-run) is '${{ steps.semantic.outputs.new_release_version }}'"
+
       - name: 'Set CI/CD variables'
         id: variables
         run: |
