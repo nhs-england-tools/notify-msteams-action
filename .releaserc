@@ -1,6 +1,7 @@
 {
   "branches": [
-    "main"
+    "main",
+    "hifa1-fix-release-5"
   ],
   "tagFormat": "v${version}",
   "plugins": [
