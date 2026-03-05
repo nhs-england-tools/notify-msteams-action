@@ -21,12 +21,12 @@ jobs:
         uses: actions/checkout@v4
       - name: 'Fail if dist/ contains changes'
         run: |
-          if git ls-files --error-unmatch dist 2>/dev/null; then
-            echo "dist/ directory is committed. This repository expects dist to be added only by release automation." >&2
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD -- dist/ | grep -q .; then
+            echo "dist/ changes detected in this PR. This repository expects dist to be updated only by release automation." >&2
             echo "Remove dist/ changes from your PR. They will be generated during release." >&2
             exit 1
           else
-            echo "No committed dist/ directory detected. Proceeding.";
+            echo "No dist/ changes detected in this PR. Proceeding."
           fi
   metadata:
     name: 'Set CI/CD metadata'
