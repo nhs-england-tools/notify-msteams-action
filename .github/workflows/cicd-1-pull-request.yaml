@@ -71,7 +71,9 @@ jobs:
         with:
           dry_run: true
           ci: false
-          branches: '["main",{"name": "refs/pull/*/merge", "prerelease": true}]''
+          branches: |
+            ["main",{"name": "refs/pull/*/merge", "prerelease": true}]
+
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
       - name: output new release version
