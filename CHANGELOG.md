@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/nhs-england-tools/notify-msteams-action/compare/v1.0.4...v1.0.5) (2026-03-06)
+
+
+### Bug Fixes
+
+* publish workflow run on push to main ([#244](https://github.com/nhs-england-tools/notify-msteams-action/issues/244)) ([1c1c7e9](https://github.com/nhs-england-tools/notify-msteams-action/commit/1c1c7e94cfd814eae5a0ed826b1920043c49f1ae))
+
 ## [1.0.4](https://github.com/nhs-england-tools/notify-msteams-action/compare/v1.0.3...v1.0.4) (2026-03-05)
 
 
