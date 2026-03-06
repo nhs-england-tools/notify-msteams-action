@@ -136,7 +136,7 @@ jobs:
           major_release_version: ${{ steps.semantic.outputs.new_release_major_version }}
 
       - name: 'Output new release details'
-        if: steps.semantic.outputs.new_release_version != ''
+        if: steps.semantic.outputs.new_release_published == 'true'
         run: |
           echo ${{ steps.semantic.outputs.new_release_version }}
           echo ${{ steps.semantic.outputs.new_release_major_version }}
