@@ -53,35 +53,24 @@ jobs:
     outputs:
       version: ${{ steps.semantic.outputs.new_release_version }}
     steps:
-      - name: "🔐 Generate app token"
+      - name: '🔐 Generate app token'
         uses: actions/create-github-app-token@v2
         id: app-token
         with:
-          app-id: ${{ vars.GH_VERSIONING_APP_ID || vars.NHS_GH_VERSIONING_APP_ID }}
-          private-key: ${{ secrets.GH_VERSIONING_APP_PRIVATE_KEY || secrets.NHS_GH_VERSIONING_APP_PRIVATE_KEY }}
+          app-id: ${{ vars.GH_VERSIONING_RELEASE_APP_ID || vars.NHS_GH_VERSIONING_RELEASE_APP_ID }}
+          private-key: ${{ secrets.GH_VERSIONING_RELEASE_APP_PRIVATE_KEY || secrets.NHS_GH_VERSIONING_RELEASE_APP_PRIVATE_KEY }}
 
-      - name: "🙈 Mask app token"
+      - name: '🙈 Mask app token'
         run: echo "::add-mask::${{ steps.app-token.outputs.token }}"
 
-      - name: "📦 Checkout repository"
+      - name: '📦 Checkout repository'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
           persist-credentials: false
 
-      - name: 'Set up Node.js'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 16
-          cache: npm
-      - name: 'Install dependencies'
-        run: npm ci
-      - name: 'Build action bundle'
-        run: npm run package
-
-
-      - name: "🔑 Import and configure commit signing key"
+      - name: '🔑 Import and configure commit signing key'
         env:
           GIT_USER_NAME: ${{ vars.GIT_SIGNING_BOT_NAME || vars.NHS_GIT_SIGNING_BOT_NAME }}
           GIT_USER_EMAIL: ${{ vars.GIT_SIGNING_BOT_EMAIL || vars.NHS_GIT_SIGNING_BOT_EMAIL }}
@@ -111,15 +100,26 @@ jobs:
           git config --get user.email
           gpg --fingerprint "$key_id"
 
-      - name: "🚀 Run release process"
+      - name: 'Set up Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+          cache: npm
+      - name: 'Install dependencies'
+        run: npm ci
+      - name: 'Build action bundle'
+        run: npm run package
+
+      - name: '🚀 Run release process'
         uses: cycjimmy/semantic-release-action@ba330626c4750c19d8299de843f05c7aa5574f62 # v5.0.2
-        id: release
+        id: semantic
         with:
           extra_plugins: |
             @semantic-release/git
             @semantic-release/github
             @semantic-release/exec
             conventional-changelog-conventionalcommits
+            @semantic-release/changelog
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           GIT_AUTHOR_NAME: ${{ vars.GIT_SIGNING_BOT_NAME || vars.NHS_GIT_SIGNING_BOT_NAME }}
@@ -128,7 +128,7 @@ jobs:
           GIT_COMMITTER_EMAIL: ${{ vars.GIT_SIGNING_BOT_EMAIL || vars.NHS_GIT_SIGNING_BOT_EMAIL }}
 
       - name: 'Update major tag'
-        if: steps.semantic.outputs.new_release_version != ''
+        if: steps.semantic.outputs.new_release_published == 'true'
         uses: ./.github/actions/update-major-tag
         with:
           github_token: ${{ steps.app-token.outputs.token }}
@@ -144,6 +144,7 @@ jobs:
           echo ${{ steps.semantic.outputs.new_release_patch_version }}
           export VERSION="${{ steps.semantic.outputs.new_release_version }}"
           make list-variables
+
   success:
     name: 'Success notification'
     runs-on: ubuntu-latest

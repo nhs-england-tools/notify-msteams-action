@@ -66,19 +66,13 @@ jobs:
       - name: 'Mask GitHub App token'
         run: echo "::add-mask::${{ steps.app-token.outputs.token }}"
       - name: 'Semantic Release'
-        uses: cycjimmy/semantic-release-action@v6.0.0
+        uses: cycjimmy/semantic-release-action@ba330626c4750c19d8299de843f05c7aa5574f62 # v5.0.2
         id: semantic
         with:
           dry_run: true
           ci: false
-          branches: |
-            ["main",{"name": "refs/pull/*/merge", "prerelease": true}]
-
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-      - name: output new release version
-        run: |
-          echo "New release version (dry-run) is '${{ steps.semantic.outputs.new_release_version }}'"
 
       - name: 'Set CI/CD variables'
         id: variables
