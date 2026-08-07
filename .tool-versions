@@ -1,8 +1,9 @@
 # This file is for you! Please, updated to the versions agreed by your team.
 
-nodejs 18.18.2
+nodejs 22.23.2
 terraform 1.7.0
 pre-commit 3.6.0
+vale 3.6.0
 
 # ==============================================================================
 # The section below is reserved for Docker image versions.
