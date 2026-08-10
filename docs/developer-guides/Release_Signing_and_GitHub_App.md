@@ -288,7 +288,7 @@ The publish workflow implements the following phases:
 
 ```yaml
 - name: Generate GitHub App token
-  uses: actions/create-github-app-token@v1
+  uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 #v3.2.0
   id: app-token
   with:
     app-id: ${{ secrets.APP_ID }}
@@ -321,7 +321,7 @@ The publish workflow implements the following phases:
 
     # Set GPG_TTY for terminal interaction
     export GPG_TTY=$(tty)- name: Semantic Release
-  uses: cycjimmy/semantic-release-action@v4.1.1
+  uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 # v6.0.0
   env:
     GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 ```
