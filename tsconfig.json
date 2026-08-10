@@ -1,8 +1,7 @@
 {
     "compilerOptions": {
       "target": "es6",                          /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019' or 'ESNEXT'. */
-      "lib": ["es2022", "dom"],               /* Include Node dependency expectations and fetch-related web types. */
-      "types": ["node"],                        /* Ensure Node globals like process are available. */
+      "lib": ["es2022"],                        /* Include Node dependency expectations and fetch-related types. */
       "module": "es2022",                       /* Emit ES modules so bundling can consume modern package exports. */
       "outDir": "./lib",                        /* Redirect output structure to the directory. */
       "rootDir": "./src",                       /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
