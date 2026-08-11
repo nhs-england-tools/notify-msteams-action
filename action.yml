@@ -22,5 +22,5 @@ inputs:
     required: false
     description: 'A link to include in the message'
 runs:
-  using: 'node16'
+  using: 'node24'
   main: 'dist/index.js'

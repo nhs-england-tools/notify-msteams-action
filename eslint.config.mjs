@@ -1,29 +1,48 @@
-{
-    "plugins": ["jest", "@typescript-eslint"],
-    "extends": ["plugin:github/recommended"],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaVersion": 9,
-      "sourceType": "module",
-      "project": "./tsconfig.json"
+import { defineConfig } from "eslint/config";
+import tsParser from "@typescript-eslint/parser";
+import tsPlugin from "@typescript-eslint/eslint-plugin";
+import githubPlugin from "eslint-plugin-github";
+import jestPlugin from "eslint-plugin-jest";
+
+export default defineConfig([
+  {
+    // Note: there should be no other properties in this object
+    ignores: ["lib/**", "dist/**", "node_modules/**", "jest.config.js"],
+  },
+  {
+    ...githubPlugin.getFlatConfigs().recommended,
+    files: ["src/**/*.ts"],
+  },
+  {
+    files: ["src/**/*.ts"],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: "./tsconfig.json",
+        sourceType: "module",
+        ecmaVersion: "latest",
+      },
+      globals: {
+        process: "readonly",
+      },
     },
-    "rules": {
-      "i18n-text/no-en": "off",
-      "eslint-comments/no-use": "off",
+    plugins: {
+      "@typescript-eslint": tsPlugin,
+      jest: jestPlugin,
+    },
+    rules: {
+      camelcase: "off",
       "import/no-namespace": "off",
+      "i18n-text/no-en": "off",
+      "no-undef": "off",
       "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "error",
-      "@typescript-eslint/explicit-member-accessibility": ["error", {"accessibility": "no-public"}],
-      "@typescript-eslint/no-require-imports": "error",
       "@typescript-eslint/array-type": "error",
       "@typescript-eslint/await-thenable": "error",
       "@typescript-eslint/ban-ts-comment": "error",
-      "camelcase": "off",
       "@typescript-eslint/consistent-type-assertions": "error",
-      "@typescript-eslint/explicit-function-return-type": ["error", {"allowExpressions": true}],
-      "@typescript-eslint/func-call-spacing": ["error", "never"],
+      "@typescript-eslint/explicit-function-return-type": ["error", { allowExpressions: true }],
+      "@typescript-eslint/explicit-member-accessibility": ["error", { accessibility: "no-public" }],
       "@typescript-eslint/no-array-constructor": "error",
-      "@typescript-eslint/no-empty-interface": "error",
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-extraneous-class": "error",
       "@typescript-eslint/no-for-in-array": "error",
@@ -31,10 +50,11 @@
       "@typescript-eslint/no-misused-new": "error",
       "@typescript-eslint/no-namespace": "error",
       "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/no-require-imports": "error",
       "@typescript-eslint/no-unnecessary-qualifier": "error",
       "@typescript-eslint/no-unnecessary-type-assertion": "error",
+      "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-useless-constructor": "error",
-      "@typescript-eslint/no-var-requires": "error",
       "@typescript-eslint/prefer-for-of": "warn",
       "@typescript-eslint/prefer-function-type": "warn",
       "@typescript-eslint/prefer-includes": "error",
@@ -42,14 +62,7 @@
       "@typescript-eslint/promise-function-async": "error",
       "@typescript-eslint/require-array-sort-compare": "error",
       "@typescript-eslint/restrict-plus-operands": "error",
-      "semi": "off",
-      "@typescript-eslint/semi": ["error", "never"],
-      "@typescript-eslint/type-annotation-spacing": "error",
-      "@typescript-eslint/unbound-method": "error"
+      "@typescript-eslint/unbound-method": "error",
     },
-    "env": {
-      "node": true,
-      "es6": true,
-      "jest/globals": true
-    }
-  }
+  },
+]);

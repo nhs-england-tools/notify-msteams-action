@@ -24,7 +24,7 @@ jobs:
       terraform_version: ${{ steps.variables.outputs.terraform_version }}
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: 'Set CI/CD variables'
         id: variables
         run: |
@@ -53,7 +53,7 @@ jobs:
       version: ${{ steps.semantic.outputs.new_release_version }}
     steps:
       - name: '🔐 Generate app token'
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 #v3.2.0
         id: app-token
         with:
           app-id: ${{ vars.GH_VERSIONING_RELEASE_APP_ID || vars.NHS_GH_VERSIONING_RELEASE_APP_ID }}
@@ -63,7 +63,7 @@ jobs:
         run: echo "::add-mask::${{ steps.app-token.outputs.token }}"
 
       - name: '📦 Checkout repository'
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
@@ -100,9 +100,9 @@ jobs:
           gpg --fingerprint "$key_id"
 
       - name: 'Set up Node.js'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          node-version: 16
+          node-version: 24
           cache: npm
       - name: 'Install dependencies'
         run: npm ci
@@ -110,7 +110,7 @@ jobs:
         run: npm run package
 
       - name: '🚀 Run release process'
-        uses: cycjimmy/semantic-release-action@ba330626c4750c19d8299de843f05c7aa5574f62 # v5.0.2
+        uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 # v6.0.0
         id: semantic
         with:
           extra_plugins: |
