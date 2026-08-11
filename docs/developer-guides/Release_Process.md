@@ -6,7 +6,7 @@ For details on securely signing release commits and using a GitHub App token, se
 
 ## Overview
 
-1. Developers raise pull requests with source changes only (no `dist/` directory committed).
+1. Developers raise pull requests with source changes only (no `dist/` directory committed). Commits should follow the conventional commit format under [Conventional Commit Examples](#conventional-commit-examples)
 2. The pull request workflow performs a semantic-release dry run to preview the next version.
 3. Once changes are merged to `main`, the publish workflow:
 
