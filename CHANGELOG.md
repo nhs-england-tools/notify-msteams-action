@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/nhs-england-tools/notify-msteams-action/compare/v1.0.5...v1.0.6) (2026-08-11)
+
+
+### Bug Fixes
+
+* upgrade node and package versions ([#264](https://github.com/nhs-england-tools/notify-msteams-action/issues/264)) ([29bb268](https://github.com/nhs-england-tools/notify-msteams-action/commit/29bb26823b72ca5cdc298392a506b84711855747))
+
 ## [1.0.5](https://github.com/nhs-england-tools/notify-msteams-action/compare/v1.0.4...v1.0.5) (2026-03-06)
 
 
