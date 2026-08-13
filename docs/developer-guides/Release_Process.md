@@ -66,6 +66,7 @@ You can validate the action locally by creating a temporary workflow that uses `
 | `refactor` | Non-functional code change           | `refactor: simplify card builder`              |
 
 Breaking changes: add `!` (`feat!:`) or a `BREAKING CHANGE:` footer.
+adding breaking change
 
 ## Failing Conditions
 
