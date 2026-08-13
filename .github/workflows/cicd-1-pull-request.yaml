@@ -165,7 +165,7 @@ jobs:
           body=$(cat <<EOF
           ${marker}
           ## Release Prediction
-
+          Following semnatic release versioning rules the commits in this pull request are predicted to result in the following release version:
           - Current version: ${CURRENT_VERSION}
           - Next increment: ${NEXT_INCREMENT}
           - Next version: ${NEXT_VERSION}
