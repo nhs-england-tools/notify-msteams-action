@@ -67,6 +67,7 @@ You can validate the action locally by creating a temporary workflow that uses `
 
 Breaking changes: add `!` (`feat!:`) or a `BREAKING CHANGE:` footer.
 adding breaking change
+added a fix
 
 ## Failing Conditions
 
