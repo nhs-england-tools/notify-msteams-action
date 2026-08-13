@@ -9,7 +9,8 @@ set -euo pipefail
 
 PREVENT_REMOVE_FILE=${1:-}
 
-LAST_TAG=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
+# Use only full semantic tags (vX.Y.Z), excluding moving major tags (for example v1).
+LAST_TAG=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || true)
 
 if [[ -n "$LAST_TAG" ]]; then
   RANGE="${LAST_TAG}..HEAD"
