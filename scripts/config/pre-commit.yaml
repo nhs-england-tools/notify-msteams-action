@@ -7,6 +7,7 @@ repos:
         args: ['check=staged-changes']
         language: script
         pass_filenames: false
+        stages: [pre-commit]
   - repo: local
     hooks:
       - id: check-file-format
@@ -15,6 +16,7 @@ repos:
         args: ['check=staged-changes']
         language: script
         pass_filenames: false
+        stages: [pre-commit]
   - repo: local
     hooks:
       - id: check-markdown-format
@@ -23,6 +25,7 @@ repos:
         args: ['check=staged-changes']
         language: script
         pass_filenames: false
+        stages: [pre-commit]
   - repo: local
     hooks:
       - id: check-english-usage
@@ -31,6 +34,7 @@ repos:
         args: ['check=staged-changes']
         language: script
         pass_filenames: false
+        stages: [pre-commit]
   - repo: local
     hooks:
       - id: lint-terraform
@@ -38,6 +42,7 @@ repos:
         entry: ./scripts/githooks/check-terraform-format.sh
         language: script
         pass_filenames: false
+        stages: [pre-commit]
   - repo: local
     hooks:
       - id: check-conventional-commits

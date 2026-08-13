@@ -15,7 +15,7 @@ FILE=$(cat "$1") # File containing the commit message
 echo "Commit Message: ${FILE}"
 
 if ! [[ $FILE =~ $REGEX ]]; then
-	echo >&2 "ERROR: Commit aborted for not following the Conventional Commit standard.​"
+	echo >&2 "ERROR: Commit aborted for not following the Conventional Commit standard. See Release_Process.md for more info​"
 	exit 1
 else
 	echo >&2 "Valid commit message."
