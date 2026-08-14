@@ -39,10 +39,3 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-commit]
-  - repo: local
-    hooks:
-      - id: check-conventional-commits
-        name: Check Conventional Commits
-        entry: ./scripts/githooks/check-conventional-commits.sh
-        language: script
-        stages: [commit-msg]

@@ -7,17 +7,15 @@ set -euo pipefail
 # minor: feat
 # patch: fix
 
-PREVENT_REMOVE_FILE=${1:-}
+PR_TITLE_INPUT=${PR_TITLE:-}
 
 # Use only full semantic tags (vX.Y.Z), excluding moving major tags (for example v1).
 LAST_TAG=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || true)
 
 if [[ -n "$LAST_TAG" ]]; then
-  RANGE="${LAST_TAG}..HEAD"
   CURRENT_VERSION="${LAST_TAG#v}"
   echo "Last tag: #$LAST_TAG#"
 else
-  RANGE="HEAD"
   CURRENT_VERSION="0.0.0"
   echo "Last tag: #none#"
 fi
@@ -59,45 +57,36 @@ increment_version() {
   echo "${major}.${minor}.${patch}"
 }
 
-write_messages_file() {
-  if [[ -s messages.txt ]]; then
-    return 0
+detect_increment_from_text() {
+  local text=$1
+
+  if grep -Eq 'BREAKING CHANGE|BREAKING CHANGES' <<< "$text" || grep -Eq '^[a-zA-Z0-9_-]+\([^)]*\)!:|^[a-zA-Z0-9_-]+!:' <<< "$text"; then
+    echo "major"
+    return
   fi
 
-  # Keep one commit body + subject stream so BREAKING CHANGE notes are detected.
-  git log "$RANGE" --no-decorate --pretty=format:'%s%n%b%n---' > messages.txt
-}
+  if grep -Eq '^feat(\([^)]*\))?:' <<< "$text"; then
+    echo "minor"
+    return
+  fi
 
-detect_increment() {
-  local increment_type="none"
-  local block
+  if grep -Eq '^fix(\([^)]*\))?:' <<< "$text"; then
+    echo "patch"
+    return
+  fi
 
-  while IFS= read -r block; do
-    [[ -z "$block" ]] && continue
-
-    if grep -Eq 'BREAKING CHANGE|BREAKING CHANGES' <<< "$block" || grep -Eq '^[a-zA-Z0-9_-]+\([^)]*\)!:|^[a-zA-Z0-9_-]+!:' <<< "$block"; then
-      echo "major"
-      return
-    fi
-
-    if grep -Eq '^feat(\([^)]*\))?:' <<< "$block"; then
-      increment_type="minor"
-      continue
-    fi
-
-    if [[ "$increment_type" == "none" ]] && grep -Eq '^fix(\([^)]*\))?:' <<< "$block"; then
-      increment_type="patch"
-    fi
-  done < <(awk 'BEGIN{RS="---\n"} {print $0}' messages.txt)
-
-  echo "$increment_type"
+  echo "none"
 }
 
 start() {
-  write_messages_file
+  if [[ -z "$PR_TITLE_INPUT" ]]; then
+    echo "PR_TITLE is required for version prediction"
+    exit 1
+  fi
 
   local increment_type
-  increment_type=$(detect_increment)
+  increment_type=$(detect_increment_from_text "$PR_TITLE_INPUT")
+
   local new_version
   new_version=$(increment_version "$CURRENT_VERSION" "$increment_type")
 
@@ -107,8 +96,4 @@ start() {
 }
 
 start
-
-if [[ -z "$PREVENT_REMOVE_FILE" ]]; then
-  rm -f messages.txt
-fi
 
