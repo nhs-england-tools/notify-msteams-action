@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+# Script to help check the next semantic version based on the PR title.
+# usage: PR_TITLE="feat: add new feature" ./scripts/version-check.sh
 # Rules aligned to Release_Process.md
 # major: BREAKING CHANGE(S) footer or conventional commit "!" (for example feat!:)
 # minor: feat
