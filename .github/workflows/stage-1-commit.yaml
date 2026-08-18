@@ -31,6 +31,15 @@ on:
         description: "Version of the software, set by the CI/CD pipeline workflow"
         required: true
         type: string
+    secrets:
+      IDP_AWS_REPORT_UPLOAD_ACCOUNT_ID:
+        required: true
+      IDP_AWS_REPORT_UPLOAD_REGION:
+        required: true
+      IDP_AWS_REPORT_UPLOAD_ROLE_NAME:
+        required: true
+      IDP_AWS_REPORT_UPLOAD_BUCKET_ENDPOINT:
+        required: true
 
 jobs:
   scan-secrets:
