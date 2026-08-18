@@ -8,7 +8,7 @@
 
 ## Overview
 
-Semantic release ([semantic-release](https://semantic-release.gitbook.io/semantic-release)) is used for automatically tagging and creating GitHub releases with change logs from commit messages. It uses the [SemVer](https://semver.org/) convention and the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification by describing the features, fixes, and breaking changes made in commit messages.
+Semantic release ([semantic-release](https://semantic-release.gitbook.io/semantic-release)) is used for automatically tagging and creating GitHub releases with change logs from commit messages. It uses the [SemVer](https://semver.org/) convention and the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification by describing the features, fixes, and breaking changes made in commit messages. Pull requests are squash-merged into `main`, so the resulting commit message is made from the pull request title and description. Use the pull request title for the conventional commit type and breaking-change marker; use the description for supporting details.
 
 The table below shows which commit message gets you which release type when semantic-release runs (using the default configuration):
 
@@ -16,7 +16,7 @@ The table below shows which commit message gets you which release type when sema
 |----------------|--------------|
 | `fix(pencil): stop graphite breaking when too much pressure applied` | ~~Patch~~ Fix Release |
 | `feat(pencil): add 'graphiteWidth' option` | ~~Minor~~ Feature Release |
-| `perf(pencil): remove graphiteWidth option`<br/>`BREAKING CHANGE: The graphiteWidth option has been removed. The default graphite width of 10mm is always used for performance reasons.` | ~~Major~~ Breaking Release <br/>(Note that the BREAKING CHANGE:  token must be in the footer of the commit) |
+| `feat!: remove graphiteWidth option` | ~~Major~~ Breaking Release <br/>(Add `!` to the pull request title.) |
 
 ## Key files
 

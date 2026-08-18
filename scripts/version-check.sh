@@ -5,9 +5,9 @@ set -euo pipefail
 # Script to help check the next semantic version based on the PR title.
 # usage: PR_TITLE="feat: add new feature" ./scripts/version-check.sh
 # Rules aligned to Release_Process.md
-# major: BREAKING CHANGE(S) footer or conventional commit "!" (for example feat!:)
+# major: conventional commit "!" (for example feat!:)
 # minor: feat
-# patch: fix
+# patch: fix, perf, refactor
 
 PR_TITLE_INPUT=${PR_TITLE:-}
 
@@ -62,7 +62,7 @@ increment_version() {
 detect_increment_from_text() {
   local text=$1
 
-  if grep -Eq 'BREAKING CHANGE|BREAKING CHANGES' <<< "$text" || grep -Eq '^[a-zA-Z0-9_-]+\([^)]*\)!:|^[a-zA-Z0-9_-]+!:' <<< "$text"; then
+  if grep -Eq '^[a-zA-Z0-9_-]+(\([^)]*\))?!:' <<< "$text"; then
     echo "major"
     return
   fi
@@ -72,7 +72,7 @@ detect_increment_from_text() {
     return
   fi
 
-  if grep -Eq '^fix(\([^)]*\))?:' <<< "$text"; then
+  if grep -Eq '^(fix|perf|refactor)(\([^)]*\))?:' <<< "$text"; then
     echo "patch"
     return
   fi
