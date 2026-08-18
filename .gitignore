@@ -14,3 +14,7 @@
 node_modules
 /dist
 /lib
+
+# Local temporary files
+tmp/
+temp/
