@@ -85,7 +85,6 @@ jobs:
     needs: [test-unit]
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
     timeout-minutes: 5
     steps:
