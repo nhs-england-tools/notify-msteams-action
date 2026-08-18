@@ -6,16 +6,12 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
-  id-token: write
-
 jobs:
   guard-dist:
     name: 'Guard: prevent committed dist changes'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -33,6 +29,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     needs: [guard-dist]
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       build_datetime_london: ${{ steps.variables.outputs.build_datetime_london }}
       build_datetime: ${{ steps.variables.outputs.build_datetime }}
@@ -123,6 +122,9 @@ jobs:
     name: 'Commit stage'
     needs: [metadata]
     uses: ./.github/workflows/stage-1-commit.yaml
+    permissions:
+      contents: read
+      id-token: write
     with:
       build_datetime: '${{ needs.metadata.outputs.build_datetime }}'
       build_timestamp: '${{ needs.metadata.outputs.build_timestamp }}'
@@ -136,6 +138,9 @@ jobs:
     name: 'Test stage'
     needs: [metadata, commit-stage]
     uses: ./.github/workflows/stage-2-test.yaml
+    permissions:
+      contents: read
+      id-token: write
     with:
       build_datetime: '${{ needs.metadata.outputs.build_datetime }}'
       build_timestamp: '${{ needs.metadata.outputs.build_timestamp }}'
@@ -150,6 +155,8 @@ jobs:
     needs: [metadata, test-stage]
     uses: ./.github/workflows/stage-3-build.yaml
     if: github.ref == 'refs/heads/main' || needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
+    permissions:
+      contents: read
     with:
       build_datetime: '${{ needs.metadata.outputs.build_datetime }}'
       build_timestamp: '${{ needs.metadata.outputs.build_timestamp }}'
@@ -164,6 +171,8 @@ jobs:
     needs: [metadata, build-stage]
     uses: ./.github/workflows/stage-4-acceptance.yaml
     if: github.ref == 'refs/heads/main' || needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
+    permissions:
+      contents: read
     with:
       build_datetime: '${{ needs.metadata.outputs.build_datetime }}'
       build_timestamp: '${{ needs.metadata.outputs.build_timestamp }}'
