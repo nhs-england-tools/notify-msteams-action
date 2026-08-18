@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# For GPG Commit signing
-echo export GPG_TTY="$(tty)" | tee -a ~/.bashrc ~/.profile
+cat <<'EOF' >> "$HOME/.bashrc"
+if [ -t 0 ]; then
+  export GPG_TTY="$(tty)"
+fi
+EOF
 
 # Setup dependencies
 make config
+
