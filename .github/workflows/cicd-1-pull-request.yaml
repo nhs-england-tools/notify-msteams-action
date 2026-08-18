@@ -83,6 +83,8 @@ jobs:
             @semantic-release/changelog
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          # Override so semantic-release doesn't skip due to PR event detection
+          GITHUB_EVENT_NAME: push
 
       - name: 'Set CI/CD variables'
         id: variables
