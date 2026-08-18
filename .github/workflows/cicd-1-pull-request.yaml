@@ -70,6 +70,7 @@ jobs:
         id: semantic
         with:
           dry_run: true
+          ci: false
           branches: |
             [
               "main",
