@@ -21,7 +21,9 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
       - name: 'Validate pull request title format'
+        id: title_check
         uses: ./.github/actions/check-pr-title
+        continue-on-error: true
       - name: 'Predict next release version'
         id: version_check
         env:
@@ -50,10 +52,18 @@ jobs:
           CURRENT_VERSION: ${{ steps.version_check.outputs.current_version }}
           NEXT_INCREMENT: ${{ steps.version_check.outputs.next_increment }}
           NEXT_VERSION: ${{ steps.version_check.outputs.next_version }}
+          TITLE_CHECK_OUTCOME: ${{ steps.title_check.outcome }}
         run: |
           marker='<!-- release-prediction-comment -->'
 
-          body=$(cat <<EOF
+          if [[ "${TITLE_CHECK_OUTCOME}" == "failure" ]]; then
+            body=$(cat <<EOF
+          ${marker}
+          WARNING: The pull request title does not match the Conventional Commits format. See docs/developer-guides/Release_Process.md for help
+          EOF
+            )
+          else
+            body=$(cat <<EOF
           ${marker}
           ## Release Prediction
           This repository follows semantic release versioning rules and squashes all commits in a pull request into a single commit.
@@ -62,7 +72,8 @@ jobs:
           - Next increment: ${NEXT_INCREMENT}
           - Next version: ${NEXT_VERSION}
           EOF
-          )
+            )
+          fi
 
           comment_ids=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --paginate --jq ".[] | select(.body | contains(\"${marker}\")) | .id")
 
@@ -74,3 +85,9 @@ jobs:
           fi
 
           gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" -f body="$body" >/dev/null
+
+      - name: 'Fail job when pull request title is invalid'
+        if: ${{ always() && steps.title_check.outcome == 'failure' }}
+        run: |
+          echo "The pull request title does not match the Conventional Commits format." >&2
+          exit 1
