@@ -59,7 +59,9 @@ jobs:
           if [[ "${TITLE_CHECK_OUTCOME}" == "failure" ]]; then
             body=$(cat <<EOF
           ${marker}
-          WARNING: The pull request title does not match the Conventional Commits format. See docs/developer-guides/Release_Process.md for help
+          WARNING: The pull request title does not match the Conventional Commits format.
+          Pull request title must follow Conventional Commits, for example: feat:, fix:, chore:, or feat!:.
+          See docs/developer-guides/Release_Process.md for help
           EOF
             )
           else
