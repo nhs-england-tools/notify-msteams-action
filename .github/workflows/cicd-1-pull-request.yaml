@@ -150,7 +150,6 @@ jobs:
     uses: ./.github/workflows/stage-2-test.yaml
     permissions:
       contents: read
-      id-token: write
     with:
       build_datetime: '${{ needs.metadata.outputs.build_datetime }}'
       build_timestamp: '${{ needs.metadata.outputs.build_timestamp }}'
@@ -161,7 +160,7 @@ jobs:
       version: '${{ needs.metadata.outputs.version }}'
     secrets:
       SONAR_TOKEN: '${{ secrets.SONAR_TOKEN }}'
-      GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+      GITHUB_READ_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
       TEAMS_WEBHOOK_URL: '${{ secrets.TEAMS_WEBHOOK_URL }}'
   build-stage: # Recommended maximum execution time is 3 minutes
     name: 'Build stage'
