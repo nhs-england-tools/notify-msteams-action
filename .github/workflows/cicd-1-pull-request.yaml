@@ -70,6 +70,11 @@ jobs:
         id: semantic
         with:
           dry_run: true
+          branches: |
+            [
+              "main",
+              {"name": "${{ github.head_ref }}", "prerelease": true}
+            ]
           extra_plugins: |
             @semantic-release/git
             @semantic-release/github
