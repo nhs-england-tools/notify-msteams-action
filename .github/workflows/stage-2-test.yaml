@@ -31,6 +31,13 @@ on:
         description: "Version of the software, set by the CI/CD pipeline workflow"
         required: true
         type: string
+    secrets:
+      SONAR_TOKEN:
+        required: true
+      GITHUB_READ_TOKEN:
+        required: true
+      TEAMS_WEBHOOK_URL:
+        required: true
 
 jobs:
   test-unit:
@@ -39,7 +46,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: "Run unit test suite"
         run: |
           make test-unit
@@ -52,7 +59,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: "Run linting"
         run: |
           make test-lint
@@ -66,7 +73,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: "Run test coverage check"
         run: |
           make test-coverage
@@ -78,12 +85,11 @@ jobs:
     needs: [test-unit]
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
     timeout-minutes: 5
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # Full history is needed to improving relevancy of reporting
       - name: "Perform static analysis"
@@ -97,9 +103,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: "Setup Node.js"
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ inputs.nodejs_version }}
       - run: |
@@ -108,7 +114,7 @@ jobs:
       - name: "Run the end-to-end test by invoking the action"
         uses: ./
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_READ_TOKEN }}
           teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
           message-title: "This is an end-to-end test"
           message-text: "It worked!"

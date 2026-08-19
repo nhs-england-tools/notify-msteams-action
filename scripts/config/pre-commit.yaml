@@ -31,11 +31,3 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-commit]
-  - repo: local
-    hooks:
-      - id: lint-terraform
-        name: Lint Terraform
-        entry: bash -c 'check=staged-changes ./scripts/githooks/check-terraform-format.sh'
-        language: system
-        pass_filenames: false
-        stages: [pre-commit]
