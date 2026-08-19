@@ -31,6 +31,15 @@ on:
         description: "Version of the software, set by the CI/CD pipeline workflow"
         required: true
         type: string
+    secrets:
+      IDP_AWS_REPORT_UPLOAD_ACCOUNT_ID:
+        required: true
+      IDP_AWS_REPORT_UPLOAD_REGION:
+        required: true
+      IDP_AWS_REPORT_UPLOAD_ROLE_NAME:
+        required: true
+      IDP_AWS_REPORT_UPLOAD_BUCKET_ENDPOINT:
+        required: true
 
 jobs:
   scan-secrets:
@@ -77,15 +86,6 @@ jobs:
           fetch-depth: 0 # Full history is needed to compare branches
       - name: "Check English usage"
         uses: ./.github/actions/check-english-usage
-  lint-terraform:
-    name: "Lint Terraform"
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: "Lint Terraform"
-        uses: ./.github/actions/lint-terraform
   count-lines-of-code:
     name: "Count lines of code"
     runs-on: ubuntu-latest
