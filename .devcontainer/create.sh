@@ -8,4 +8,3 @@ EOF
 
 # Setup dependencies
 make config
-

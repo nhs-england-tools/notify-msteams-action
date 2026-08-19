@@ -98,4 +98,3 @@ start() {
 }
 
 start
-
