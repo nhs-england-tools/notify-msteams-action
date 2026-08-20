@@ -22,14 +22,14 @@ This action can be called as part of your [GitHub action](https://docs.github.co
 Add the following section to your existing workflow file (pin to a released major tag; the moving `v1` tag will always point at the latest backward-compatible release within the same major):
 
 ```yml
-      - name: Notify Teams
-        uses: nhs-england-tools/notify-msteams-action@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
-          message-title: "Replace with an appropriate title"
-          message-text: "Replace with appropriate text"
-          link: https://example.org
+- name: Notify Teams
+  uses: nhs-england-tools/notify-msteams-action@v1
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
+    message-title: 'Replace with an appropriate title'
+    message-text: 'Replace with appropriate text'
+    link: https://example.org
 ```
 
 Follow the instructions [to add an Incoming Webhook](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet) to the Teams channel of your choice.
@@ -95,14 +95,14 @@ For information about signed release commits, using a GitHub App for least-privi
 
 Centralised list of developer-facing guides in this repository:
 
-| Guide | Description |
-|-------|-------------|
-| [Bash and Make](docs/developer-guides/Bash_and_Make.md) | Conventions and patterns for Make targets and supporting Bash scripts, including target signatures and reuse. |
-| [Scripting Docker](docs/developer-guides/Scripting_Docker.md) | Opinionated Docker workflows: build, test, version (CalVer patterns), push and image management conventions. |
-| [Scripting Terraform](docs/developer-guides/Scripting_Terraform.md) | Terraform automation via Make wrappers, structure, state handling, quality enforcement and CI integration. |
-| [Release Process](docs/developer-guides/Release_Process.md) | End-to-end semantic-release driven publish pipeline and rationale for build-at-release strategy. |
-| [Release Signing & GitHub App](docs/developer-guides/Release_Signing_and_GitHub_App.md) | Secure release provenance: GitHub App token usage, GPG key generation, rotation and revocation procedures. |
-| [Sign Git commits](docs/user-guides/Sign_Git_commits.md) | How to configure and use GPG or SSH for commit signature verification locally and in CI. |
+| Guide                                                                                   | Description                                                                                                   |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| [Bash and Make](docs/developer-guides/Bash_and_Make.md)                                 | Conventions and patterns for Make targets and supporting Bash scripts, including target signatures and reuse. |
+| [Scripting Docker](docs/developer-guides/Scripting_Docker.md)                           | Opinionated Docker workflows: build, test, version (CalVer patterns), push and image management conventions.  |
+| [Scripting Terraform](docs/developer-guides/Scripting_Terraform.md)                     | Terraform automation via Make wrappers, structure, state handling, quality enforcement and CI integration.    |
+| [Release Process](docs/developer-guides/Release_Process.md)                             | End-to-end semantic-release driven publish pipeline and rationale for build-at-release strategy.              |
+| [Release Signing & GitHub App](docs/developer-guides/Release_Signing_and_GitHub_App.md) | Secure release provenance: GitHub App token usage, GPG key generation, rotation and revocation procedures.    |
+| [Sign Git commits](docs/user-guides/Sign_Git_commits.md)                                | How to configure and use GPG or SSH for commit signature verification locally and in CI.                      |
 
 ### Contributing (Important Policy About `dist/`)
 
@@ -119,14 +119,14 @@ Then you can reference the action locally in a workflow within this repository u
 
 ### Conventional Commits
 
-To trigger proper version bumps, use the Conventional Commits format, for example:
+Pull requests are squash-merged into `main`. The resulting commit message is made from the pull request title and description, so use the pull request title to set the release type and use the description for supporting details. To trigger proper version bumps, use the Conventional Commits format in the title, for example:
 
 - `feat: add support for message colour`
 - `fix: correct Teams webhook error handling`
 - `chore: update dependencies`
 - `docs: clarify usage section`
 
-Breaking changes must include `!` after the type or the phrase `BREAKING CHANGE:` in the footer.
+Breaking changes must include `!` after the type or scope in the pull request title, for example `feat!:` or `feat(api)!:`. Do not rely on a separate `BREAKING CHANGE:` footer.
 
 ## Contacts
 

@@ -6,16 +6,12 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
-  id-token: write
-
 jobs:
   guard-dist:
     name: 'Guard: prevent committed dist changes'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -33,6 +29,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     needs: [guard-dist]
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       build_datetime_london: ${{ steps.variables.outputs.build_datetime_london }}
       build_datetime: ${{ steps.variables.outputs.build_datetime }}
@@ -57,15 +56,20 @@ jobs:
         run: npm ci
       - name: 'Build action bundle (dry-run context)'
         run: npm run package
+
+        # Skip dry-run if the workflow is triggered by a pull request from dependabot[bot]
       - name: 'Generate GitHub App token'
+        if: github.actor != 'dependabot[bot]'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: app-token
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: 'Mask GitHub App token'
+        if: github.actor != 'dependabot[bot]'
         run: echo "::add-mask::${{ steps.app-token.outputs.token }}"
       - name: 'Semantic Release'
+        if: github.actor != 'dependabot[bot]'
         uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 # v6.0.0
         id: semantic
         with:
@@ -92,6 +96,7 @@ jobs:
           echo "python_version=$(grep "^nodejs" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
           echo "terraform_version=$(grep "^terraform" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
           echo "version=${{steps.semantic.outputs.new_release_version}}" >> $GITHUB_OUTPUT
+
       - name: 'Check if pull request exists for this branch'
         id: pr_exists
         env:
@@ -119,10 +124,14 @@ jobs:
           export VERSION="${{ steps.variables.outputs.version }}"
           export DOES_PULL_REQUEST_EXIST="${{ steps.pr_exists.outputs.does_pull_request_exist }}"
           make list-variables
+
   commit-stage: # Recommended maximum execution time is 2 minutes
     name: 'Commit stage'
     needs: [metadata]
     uses: ./.github/workflows/stage-1-commit.yaml
+    permissions:
+      contents: read
+      id-token: write
     with:
       build_datetime: '${{ needs.metadata.outputs.build_datetime }}'
       build_timestamp: '${{ needs.metadata.outputs.build_timestamp }}'
@@ -131,11 +140,17 @@ jobs:
       python_version: '${{ needs.metadata.outputs.python_version }}'
       terraform_version: '${{ needs.metadata.outputs.terraform_version }}'
       version: '${{ needs.metadata.outputs.version }}'
-    secrets: inherit
+    secrets:
+      IDP_AWS_REPORT_UPLOAD_ACCOUNT_ID: '${{ secrets.IDP_AWS_REPORT_UPLOAD_ACCOUNT_ID }}'
+      IDP_AWS_REPORT_UPLOAD_REGION: '${{ secrets.IDP_AWS_REPORT_UPLOAD_REGION }}'
+      IDP_AWS_REPORT_UPLOAD_ROLE_NAME: '${{ secrets.IDP_AWS_REPORT_UPLOAD_ROLE_NAME }}'
+      IDP_AWS_REPORT_UPLOAD_BUCKET_ENDPOINT: '${{ secrets.IDP_AWS_REPORT_UPLOAD_BUCKET_ENDPOINT }}'
   test-stage: # Recommended maximum execution time is 5 minutes
     name: 'Test stage'
     needs: [metadata, commit-stage]
     uses: ./.github/workflows/stage-2-test.yaml
+    permissions:
+      contents: read
     with:
       build_datetime: '${{ needs.metadata.outputs.build_datetime }}'
       build_timestamp: '${{ needs.metadata.outputs.build_timestamp }}'
@@ -144,12 +159,17 @@ jobs:
       python_version: '${{ needs.metadata.outputs.python_version }}'
       terraform_version: '${{ needs.metadata.outputs.terraform_version }}'
       version: '${{ needs.metadata.outputs.version }}'
-    secrets: inherit
+    secrets:
+      SONAR_TOKEN: '${{ secrets.SONAR_TOKEN }}'
+      GITHUB_READ_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+      TEAMS_WEBHOOK_URL: '${{ secrets.TEAMS_WEBHOOK_URL }}'
   build-stage: # Recommended maximum execution time is 3 minutes
     name: 'Build stage'
     needs: [metadata, test-stage]
     uses: ./.github/workflows/stage-3-build.yaml
     if: github.ref == 'refs/heads/main' || needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
+    permissions:
+      contents: read
     with:
       build_datetime: '${{ needs.metadata.outputs.build_datetime }}'
       build_timestamp: '${{ needs.metadata.outputs.build_timestamp }}'
@@ -158,18 +178,3 @@ jobs:
       python_version: '${{ needs.metadata.outputs.python_version }}'
       terraform_version: '${{ needs.metadata.outputs.terraform_version }}'
       version: '${{ needs.metadata.outputs.version }}'
-    secrets: inherit
-  acceptance-stage: # Recommended maximum execution time is 10 minutes
-    name: 'Acceptance stage'
-    needs: [metadata, build-stage]
-    uses: ./.github/workflows/stage-4-acceptance.yaml
-    if: github.ref == 'refs/heads/main' || needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
-    with:
-      build_datetime: '${{ needs.metadata.outputs.build_datetime }}'
-      build_timestamp: '${{ needs.metadata.outputs.build_timestamp }}'
-      build_epoch: '${{ needs.metadata.outputs.build_epoch }}'
-      nodejs_version: '${{ needs.metadata.outputs.nodejs_version }}'
-      python_version: '${{ needs.metadata.outputs.python_version }}'
-      terraform_version: '${{ needs.metadata.outputs.terraform_version }}'
-      version: '${{ needs.metadata.outputs.version }}'
-    secrets: inherit

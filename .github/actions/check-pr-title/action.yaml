@@ -1,0 +1,29 @@
+name: 'Check PR title'
+description: 'Validate pull request title against Conventional Commits'
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Check PR title'
+      shell: bash
+      env:
+        PR_TITLE: '${{ github.event.pull_request.title }}'
+      run: |
+        set -euo pipefail
+
+        # Conventional Commit title format: type(scope)!: subject
+        regex='^((build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\(.*\))?!?: .+)'
+
+        if [[ -z "${PR_TITLE}" ]]; then
+          echo "ERROR: Missing PR title from GitHub event payload." >&2
+          exit 1
+        fi
+
+        echo "Pull request title: ${PR_TITLE}"
+
+        if ! [[ "${PR_TITLE}" =~ ${regex} ]]; then
+          echo "ERROR: Pull request title must follow Conventional Commits, for example: feat:, fix:, chore:, or feat!:" >&2
+          echo "See docs/developer-guides/Release_Process.md for details." >&2
+          exit 1
+        fi
+
+        echo "Valid pull request title."

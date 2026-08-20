@@ -6,7 +6,7 @@ For details on securely signing release commits and using a GitHub App token, se
 
 ## Overview
 
-1. Developers raise pull requests with source changes only (no `dist/` directory committed). Commits should follow the conventional commit format under [Conventional Commit Examples](#conventional-commit-examples)
+1. Developers raise pull requests with source changes only (no `dist/` directory committed). Pull requests are squash-merged into `main`, so the resulting commit message is made from the pull request title and description. The pull request title should follow the conventional commit format under [Conventional Commit Examples](#conventional-commit-examples).
 2. The pull request workflow performs a semantic-release dry run to preview the next version.
 3. Once changes are merged to `main`, the publish workflow:
 
@@ -58,14 +58,14 @@ You can validate the action locally by creating a temporary workflow that uses `
 
 | Type  | Purpose                                | Example                                        |
 |-------|-----------------------------------------|------------------------------------------------|
-| `feat`  | New feature (minor bump)                | `feat: support custom message colour`          |
-| `fix`   | Bug fix (patch bump)                    | `fix: correct adaptive card JSON schema`       |
-| `chore` | Build/tooling changes                   | `chore: update eslint config`                  |
-| `docs`  | Documentation updates                   | `docs: add release process guide`              |
-| `perf`  | Performance improvement                 | `perf: reduce bundle size`                     |
-| `refactor` | Non-functional code change           | `refactor: simplify card builder`              |
+| `feat`     | New feature (minor bump)                         | `feat: support custom message colour`     |
+| `fix`      | Bug fix (patch bump)                             | `fix: correct adaptive card JSON schema`  |
+| `perf`     | Performance improvement (patch bump)             | `perf: reduce bundle size`                |
+| `refactor` | Non-functional code change (patch bump)          | `refactor: simplify card builder`         |
+| `chore`    | Build/tooling changes (no release)               | `chore: update eslint config`             |
+| `docs`     | Documentation updates (no release)               | `docs: add release process guide`        |
 
-Breaking changes: add `!` (`feat!:`) or a `BREAKING CHANGE:` footer.
+Breaking changes: add `!` after the type or scope in the pull request title (for example, `feat!:` or `feat(api)!:`). The squash commit uses the pull request title and description, so do not rely on a separate commit footer.
 
 ## Failing Conditions
 
