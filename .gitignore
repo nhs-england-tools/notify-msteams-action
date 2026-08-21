@@ -6,6 +6,7 @@
 *vulnerabilities*report*.json
 *report*json.zip
 .version
+*.env
 
 *.code-workspace
 !project.code-workspace
@@ -14,4 +15,7 @@
 node_modules
 /dist
 /lib
-*.env
+
+# Local temporary files
+tmp/
+temp/
