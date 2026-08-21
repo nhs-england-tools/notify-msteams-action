@@ -2,7 +2,7 @@ version: 2
 
 updates:
   - package-ecosystem: 'docker'
-    directory: '/'
+    directory: '/scripts/docker/tests'
     schedule:
       interval: 'daily'
     cooldown:
@@ -21,32 +21,18 @@ updates:
       # Prefix all commit messages with "chore: "
       prefix: 'chore'
 
+# No Python dependency manifest is present. Enable this ecosystem when one is added.
+# No Terraform dependency manifest is present. Enable this ecosystem when one is added.
+
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
       interval: 'daily'
     cooldown:
       default-days: 7
-    commit-message:
-      # Prefix all commit messages with "chore: "
-      prefix: 'chore'
-
-  - package-ecosystem: 'pip'
-    directory: '/'
-    schedule:
-      interval: 'daily'
-    cooldown:
-      default-days: 7
-    commit-message:
-      # Prefix all commit messages with "chore: "
-      prefix: 'chore'
-
-  - package-ecosystem: 'terraform'
-    directory: '/'
-    schedule:
-      interval: 'daily'
-    cooldown:
-      default-days: 7
+    ignore:
+      - dependency-name: 'typescript'
+        versions: ['>= 7.0.0']
     commit-message:
       # Prefix all commit messages with "chore: "
       prefix: 'chore'
