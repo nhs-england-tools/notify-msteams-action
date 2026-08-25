@@ -30,9 +30,6 @@ updates:
       interval: 'daily'
     cooldown:
       default-days: 7
-    ignore:
-      - dependency-name: 'typescript'
-        versions: ['>= 7.0.0']
     commit-message:
       # Prefix all commit messages with "chore: "
       prefix: 'chore'
