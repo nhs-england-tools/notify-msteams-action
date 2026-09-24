@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/nhs-england-tools/notify-msteams-action/compare/v1.0.7...v1.1.0) (2026-09-24)
+
+
+### Features
+
+* Add Dependabot prompt to repo ([#320](https://github.com/nhs-england-tools/notify-msteams-action/issues/320)) ([eb7ac6d](https://github.com/nhs-england-tools/notify-msteams-action/commit/eb7ac6d02990209b361c7cc77d1370d1377e18a0))
+
 ## [1.0.7](https://github.com/nhs-england-tools/notify-msteams-action/compare/v1.0.6...v1.0.7) (2026-08-26)
 
 
