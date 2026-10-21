@@ -123,7 +123,7 @@ jobs:
             done
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: "Raise Jira ticket for Dependabot cleardown"
+      - name: "Raise or update Jira ticket for Dependabot cleardown"
         if: steps.prs.outputs.count != '0' || steps.alerts.outputs.count != '0'
         env:
           JIRA_PAT: ${{ secrets.JIRA_PAT }}
@@ -162,7 +162,7 @@ jobs:
           fi
 
           description="h3. Context
-          Automated Dependabot cleardown ticket for [${GH_REPO}|https://github.com/${GH_REPO}], raised by the [List Open Dependabot Pull Requests and Alerts workflow run|${RUN_URL}].
+          Automated Dependabot cleardown ticket for [${GH_REPO}|https://github.com/${GH_REPO}]. Last refreshed by [this workflow run|${RUN_URL}] on $(date -u +"%Y-%m-%d %H:%M UTC"); the lists below reflect what was open at that time.
 
           h3. Open Dependabot pull requests (${PR_COUNT})
           ${PR_LINES:-None}
@@ -170,44 +170,73 @@ jobs:
           h3. Open critical/high Dependabot security alerts (${ALERT_COUNT})
           ${ALERT_LINES:-None}"
 
-          payload=$(jq -n \
-            --arg summary "$summary" \
-            --arg description "$description" \
-            --arg epic_field "$epic_field" \
-            --arg epic_key "$EPIC_KEY" \
-            '{
-              fields: ({
-                project: { key: "ENG" },
-                summary: $summary,
-                issuetype: { name: "Task" },
-                description: $description,
-                labels: ["SOW_ETA"],
-                priority: { name: "Trivial" }
-              } + { ($epic_field): $epic_key })
-            }')
+          # Calls the Jira API, printing the response and failing the step unless the expected status is returned
+          jira_api() {
+            local method=$1 path=$2 expected=$3 data=${4:-}
+            local args=(-sS -w '\n%{http_code}' -X "$method"
+              -H "Authorization: Bearer ${JIRA_PAT}"
+              -H "Accept: application/json")
+            [ -n "$data" ] && args+=(-H "Content-Type: application/json" -d "$data")
+            local response http_code
+            response=$(curl "${args[@]}" "${JIRA_BASE_URL}${path}")
+            http_code=$(tail -n1 <<< "$response")
+            JIRA_BODY=$(sed '$d' <<< "$response")
+            echo "Jira API ${method} ${path} -> HTTP ${http_code}" >&2
+            if [ "$http_code" != "$expected" ]; then
+              echo "::error::Jira API ${method} ${path} returned HTTP ${http_code} (expected ${expected})" >&2
+              echo "Jira API response: ${JIRA_BODY}" >&2
+              exit 1
+            fi
+          }
 
-          response=$(curl -sS -w '\n%{http_code}' -X POST \
-            -H "Authorization: Bearer ${JIRA_PAT}" \
-            -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
-            -d "$payload" \
-            "${JIRA_BASE_URL}/rest/api/2/issue")
-          http_code=$(tail -n1 <<< "$response")
-          body=$(sed '$d' <<< "$response")
+          # De-duplicate: find an open ticket in the epic with exactly this summary
+          # (JQL "~" is a fuzzy text match, so the exact comparison is done with jq)
+          escaped_summary=${summary//\\/\\\\}
+          escaped_summary=${escaped_summary//\"/\\\"}
+          jql="project = ENG AND \"Epic Link\" = ${EPIC_KEY} AND statusCategory != Done AND summary ~ \"\\\"${escaped_summary}\\\"\" ORDER BY created ASC"
+          echo "Searching for an existing ticket: ${jql}"
+          search_payload=$(jq -n --arg jql "$jql" '{jql: $jql, fields: ["summary", "status"], maxResults: 50}')
+          jira_api POST /rest/api/2/search 200 "$search_payload"
+          matches=$(jq -r --arg summary "$summary" \
+            '[.issues[] | select(.fields.summary == $summary) | .key] | join(" ")' <<< "$JIRA_BODY")
+          read -r -a match_keys <<< "$matches"
 
-          echo "Jira API HTTP status: ${http_code}"
-          echo "Jira API response: ${body}"
-
-          if [ "$http_code" != "201" ]; then
-            echo "::error::Jira ticket creation failed with HTTP ${http_code}"
-            exit 1
+          if [ "${#match_keys[@]}" -gt 0 ]; then
+            issue_key=${match_keys[0]}
+            if [ "${#match_keys[@]}" -gt 1 ]; then
+              echo "::warning::Found ${#match_keys[@]} open '${summary}' tickets (${matches}); updating the oldest, ${issue_key}"
+            fi
+            echo "Found existing ticket ${issue_key}; updating its description"
+            update_payload=$(jq -n --arg description "$description" '{fields: {description: $description}}')
+            jira_api PUT "/rest/api/2/issue/${issue_key}" 204 "$update_payload"
+            action="Updated"
+          else
+            echo "No open '${summary}' ticket found in ${EPIC_KEY}; creating one"
+            create_payload=$(jq -n \
+              --arg summary "$summary" \
+              --arg description "$description" \
+              --arg epic_field "$epic_field" \
+              --arg epic_key "$EPIC_KEY" \
+              '{
+                fields: ({
+                  project: { key: "ENG" },
+                  summary: $summary,
+                  issuetype: { name: "Task" },
+                  description: $description,
+                  labels: ["SOW_ETA"],
+                  priority: { name: "Trivial" }
+                } + { ($epic_field): $epic_key })
+              }')
+            jira_api POST /rest/api/2/issue 201 "$create_payload"
+            echo "Jira API response: ${JIRA_BODY}"
+            issue_key=$(jq -r '.key' <<< "$JIRA_BODY")
+            action="Created"
           fi
 
-          issue_key=$(jq -r '.key' <<< "$body")
-          echo "Created Jira ticket ${issue_key}: ${JIRA_BASE_URL}/browse/${issue_key}"
+          echo "${action} Jira ticket ${issue_key}: ${JIRA_BASE_URL}/browse/${issue_key}"
           {
             echo
             echo "## Jira ticket"
             echo
-            echo "Created [${issue_key}](${JIRA_BASE_URL}/browse/${issue_key}): ${summary}"
+            echo "${action} [${issue_key}](${JIRA_BASE_URL}/browse/${issue_key}): ${summary}"
           } >> "$GITHUB_STEP_SUMMARY"
