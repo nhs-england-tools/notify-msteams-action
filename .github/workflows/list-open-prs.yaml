@@ -1,4 +1,4 @@
-name: "List Open Pull Requests and Dependabot Alerts"
+name: "List Open Dependabot Pull Requests and Alerts"
 
 on:
   workflow_dispatch:
@@ -15,46 +15,64 @@ permissions:
 
 jobs:
   list-open-prs:
-    name: "List open PRs and Dependabot alerts"
+    name: "List open Dependabot PRs and alerts"
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
-      - name: "Print open pull requests"
+      - name: "Print open Dependabot pull requests"
+        id: prs
         run: |
-          prs=$(gh pr list --state open --limit 1000 \
-            --json number,title,author,headRefName,isDraft,createdAt,url \
-            --jq '.[] | "#\(.number)\t\(.title)\t@\(.author.login)\t\(.headRefName)\t\(if .isDraft then "draft" else "ready" end)\t\(.createdAt[:10])\t\(.url)"')
+          prs=$(gh pr list --state open --author "app/dependabot" --limit 1000 \
+            --json number,title,headRefName,isDraft,createdAt,url \
+            --jq '.[] | "#\(.number)\t\(.title)\t\(.headRefName)\t\(if .isDraft then "draft" else "ready" end)\t\(.createdAt[:10])\t\(.url)"')
 
           count=$(printf '%s' "$prs" | grep -c . || true)
-          echo "Open pull requests in ${GH_REPO}: ${count}"
+          echo "Open Dependabot pull requests in ${GH_REPO}: ${count}"
           echo
 
+          jira_escape() {
+            local s=$1
+            for c in '\' '[' ']' '|' '{' '}'; do s=${s//"$c"/\\$c}; done
+            printf '%s' "$s"
+          }
           {
-            echo "## Open pull requests (${count})"
+            echo "count=${count}"
+            echo "jira_lines<<JIRA_EOF"
+            if [ "$count" -gt 0 ]; then
+              printf '%s\n' "$prs" | while IFS=$'\t' read -r num title branch status created url; do
+                echo "* [${num}|${url}] - $(jira_escape "$title") (${status}, opened ${created})"
+              done
+            fi
+            echo "JIRA_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Open Dependabot pull requests (${count})"
             echo
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$count" -eq 0 ]; then
-            echo "No open pull requests."
-            echo "No open pull requests." >> "$GITHUB_STEP_SUMMARY"
+            echo "No open Dependabot pull requests."
+            echo "No open Dependabot pull requests." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-          { printf 'PR\tTITLE\tAUTHOR\tBRANCH\tSTATUS\tCREATED\tURL\n'; printf '%s\n' "$prs"; } | column -t -s $'\t'
+          { printf 'PR\tTITLE\tBRANCH\tSTATUS\tCREATED\tURL\n'; printf '%s\n' "$prs"; } | column -t -s $'\t'
 
           {
-            echo "| PR | Title | Author | Branch | Status | Created |"
-            echo "| -- | ----- | ------ | ------ | ------ | ------- |"
-            printf '%s\n' "$prs" | while IFS=$'\t' read -r num title author branch status created url; do
+            echo "| PR | Title | Branch | Status | Created |"
+            echo "| -- | ----- | ------ | ------ | ------- |"
+            printf '%s\n' "$prs" | while IFS=$'\t' read -r num title branch status created url; do
               title=${title//|/\\|}
-              echo "| [${num}](${url}) | ${title} | ${author} | \`${branch}\` | ${status} | ${created} |"
+              echo "| [${num}](${url}) | ${title} | \`${branch}\` | ${status} | ${created} |"
             done
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: "Print open critical/high Dependabot alerts"
+        id: alerts
         run: |
           # Rank prefix lets critical sort above high across paginated results
           alerts=$(gh api --paginate \
@@ -65,6 +83,22 @@ jobs:
           count=$(printf '%s' "$alerts" | grep -c . || true)
           echo "Open critical/high Dependabot alerts in ${GH_REPO}: ${count}"
           echo
+
+          jira_escape() {
+            local s=$1
+            for c in '\' '[' ']' '|' '{' '}'; do s=${s//"$c"/\\$c}; done
+            printf '%s' "$s"
+          }
+          {
+            echo "count=${count}"
+            echo "jira_lines<<JIRA_EOF"
+            if [ "$count" -gt 0 ]; then
+              printf '%s\n' "$alerts" | while IFS=$'\t' read -r num severity ecosystem package manifest patched ghsa summary url; do
+                echo "* [${num}|${url}] - *${severity}* - $(jira_escape "$package") (${ecosystem}) in {{$(jira_escape "$manifest")}} - ${ghsa} - $(jira_escape "$summary") (patched in: ${patched})"
+              done
+            fi
+            echo "JIRA_EOF"
+          } >> "$GITHUB_OUTPUT"
 
           {
             echo
@@ -87,4 +121,93 @@ jobs:
               summary=${summary//|/\\|}
               echo "| [${num}](${url}) | ${severity} | ${package} (${ecosystem}) | \`${manifest}\` | ${patched} | ${ghsa} | ${summary} |"
             done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Raise Jira ticket for Dependabot cleardown"
+        if: steps.prs.outputs.count != '0' || steps.alerts.outputs.count != '0'
+        env:
+          JIRA_PAT: ${{ secrets.JIRA_PAT }}
+          JIRA_BASE_URL: https://nhsd-jira.digital.nhs.uk
+          EPIC_KEY: ENG-1750
+          PR_COUNT: ${{ steps.prs.outputs.count }}
+          PR_LINES: ${{ steps.prs.outputs.jira_lines }}
+          ALERT_COUNT: ${{ steps.alerts.outputs.count }}
+          ALERT_LINES: ${{ steps.alerts.outputs.jira_lines }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$JIRA_PAT" ]; then
+            echo "::error::Repository secret JIRA_PAT is not set"
+            exit 1
+          fi
+
+          repo_name=${GH_REPO#*/}
+          summary="${repo_name} Dependabot cleardown"
+
+          # Epic Link is a custom field on Jira Server, so resolve its ID rather than hard-coding it
+          fields_response=$(curl -sS -w '\n%{http_code}' \
+            -H "Authorization: Bearer ${JIRA_PAT}" \
+            -H "Accept: application/json" \
+            "${JIRA_BASE_URL}/rest/api/2/field")
+          fields_code=$(tail -n1 <<< "$fields_response")
+          fields_body=$(sed '$d' <<< "$fields_response")
+          if [ "$fields_code" != "200" ]; then
+            echo "::error::Failed to look up Jira fields (HTTP ${fields_code})"
+            echo "$fields_body"
+            exit 1
+          fi
+          epic_field=$(jq -r 'first(.[] | select(.name == "Epic Link") | .id) // empty' <<< "$fields_body")
+          if [ -z "$epic_field" ]; then
+            echo "::error::Could not find the 'Epic Link' field in Jira"
+            exit 1
+          fi
+
+          description="h3. Context
+          Automated Dependabot cleardown ticket for [${GH_REPO}|https://github.com/${GH_REPO}], raised by the [List Open Dependabot Pull Requests and Alerts workflow run|${RUN_URL}].
+
+          h3. Open Dependabot pull requests (${PR_COUNT})
+          ${PR_LINES:-None}
+
+          h3. Open critical/high Dependabot security alerts (${ALERT_COUNT})
+          ${ALERT_LINES:-None}"
+
+          payload=$(jq -n \
+            --arg summary "$summary" \
+            --arg description "$description" \
+            --arg epic_field "$epic_field" \
+            --arg epic_key "$EPIC_KEY" \
+            '{
+              fields: ({
+                project: { key: "ENG" },
+                summary: $summary,
+                issuetype: { name: "Task" },
+                description: $description,
+                labels: ["SOW_ETA"],
+                priority: { name: "Trivial" }
+              } + { ($epic_field): $epic_key })
+            }')
+
+          response=$(curl -sS -w '\n%{http_code}' -X POST \
+            -H "Authorization: Bearer ${JIRA_PAT}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -d "$payload" \
+            "${JIRA_BASE_URL}/rest/api/2/issue")
+          http_code=$(tail -n1 <<< "$response")
+          body=$(sed '$d' <<< "$response")
+
+          echo "Jira API HTTP status: ${http_code}"
+          echo "Jira API response: ${body}"
+
+          if [ "$http_code" != "201" ]; then
+            echo "::error::Jira ticket creation failed with HTTP ${http_code}"
+            exit 1
+          fi
+
+          issue_key=$(jq -r '.key' <<< "$body")
+          echo "Created Jira ticket ${issue_key}: ${JIRA_BASE_URL}/browse/${issue_key}"
+          {
+            echo
+            echo "## Jira ticket"
+            echo
+            echo "Created [${issue_key}](${JIRA_BASE_URL}/browse/${issue_key}): ${summary}"
           } >> "$GITHUB_STEP_SUMMARY"
