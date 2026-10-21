@@ -1,0 +1,90 @@
+name: "List Open Pull Requests and Dependabot Alerts"
+
+on:
+  workflow_dispatch:
+  # TEMPORARY: remove before merging - allows testing from the feature branch
+  push:
+    branches:
+      - JB-ENG-1655-dependabot-jira-automation
+    paths:
+      - .github/workflows/list-open-prs.yaml
+
+permissions:
+  pull-requests: read
+  vulnerability-alerts: read
+
+jobs:
+  list-open-prs:
+    name: "List open PRs and Dependabot alerts"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: "Print open pull requests"
+        run: |
+          prs=$(gh pr list --state open --limit 1000 \
+            --json number,title,author,headRefName,isDraft,createdAt,url \
+            --jq '.[] | "#\(.number)\t\(.title)\t@\(.author.login)\t\(.headRefName)\t\(if .isDraft then "draft" else "ready" end)\t\(.createdAt[:10])\t\(.url)"')
+
+          count=$(printf '%s' "$prs" | grep -c . || true)
+          echo "Open pull requests in ${GH_REPO}: ${count}"
+          echo
+
+          {
+            echo "## Open pull requests (${count})"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$count" -eq 0 ]; then
+            echo "No open pull requests."
+            echo "No open pull requests." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          { printf 'PR\tTITLE\tAUTHOR\tBRANCH\tSTATUS\tCREATED\tURL\n'; printf '%s\n' "$prs"; } | column -t -s $'\t'
+
+          {
+            echo "| PR | Title | Author | Branch | Status | Created |"
+            echo "| -- | ----- | ------ | ------ | ------ | ------- |"
+            printf '%s\n' "$prs" | while IFS=$'\t' read -r num title author branch status created url; do
+              title=${title//|/\\|}
+              echo "| [${num}](${url}) | ${title} | ${author} | \`${branch}\` | ${status} | ${created} |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Print open critical/high Dependabot alerts"
+        run: |
+          # Rank prefix lets critical sort above high across paginated results
+          alerts=$(gh api --paginate \
+            "repos/${GH_REPO}/dependabot/alerts?state=open&severity=critical,high&per_page=100" \
+            --jq '.[] | "\(if .security_vulnerability.severity == "critical" then 0 else 1 end)\t#\(.number)\t\(.security_vulnerability.severity | ascii_upcase)\t\(.dependency.package.ecosystem)\t\(.dependency.package.name)\t\(.dependency.manifest_path)\t\(.security_vulnerability.first_patched_version.identifier // "none")\t\(.security_advisory.ghsa_id)\t\(.security_advisory.summary)\t\(.html_url)"' \
+            | sort -t $'\t' -k1,1n -k2,2V | cut -f2-)
+
+          count=$(printf '%s' "$alerts" | grep -c . || true)
+          echo "Open critical/high Dependabot alerts in ${GH_REPO}: ${count}"
+          echo
+
+          {
+            echo
+            echo "## Open critical/high Dependabot alerts (${count})"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$count" -eq 0 ]; then
+            echo "No open critical or high Dependabot alerts."
+            echo "No open critical or high Dependabot alerts." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          { printf 'ALERT\tSEVERITY\tECOSYSTEM\tPACKAGE\tMANIFEST\tPATCHED IN\tADVISORY\tSUMMARY\tURL\n'; printf '%s\n' "$alerts"; } | column -t -s $'\t'
+
+          {
+            echo "| Alert | Severity | Package | Manifest | Patched in | Advisory | Summary |"
+            echo "| ----- | -------- | ------- | -------- | ---------- | -------- | ------- |"
+            printf '%s\n' "$alerts" | while IFS=$'\t' read -r num severity ecosystem package manifest patched ghsa summary url; do
+              summary=${summary//|/\\|}
+              echo "| [${num}](${url}) | ${severity} | ${package} (${ecosystem}) | \`${manifest}\` | ${patched} | ${ghsa} | ${summary} |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
