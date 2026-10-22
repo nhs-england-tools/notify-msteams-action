@@ -1,0 +1,32 @@
+name: "Dependabot Cleardown"
+
+on:
+  # Cron is UTC: 05:15 UK time in winter (GMT), 06:15 during British Summer Time.
+  # Scheduled runs always use the default branch.
+  schedule:
+    - cron: "15 5 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: look up Jira and log the ticket create/update without sending it"
+        type: boolean
+        default: false
+  # TEMPORARY: remove before merging. Always a dry run.
+  push:
+    branches:
+      - JB-ENG-1655-jira-automation-shared-workflow
+
+permissions:
+  contents: read
+  pull-requests: read
+  vulnerability-alerts: read
+
+jobs:
+  dependabot-cleardown:
+    # TEMPORARY: switch back to @main (or a SHA) before merging
+    uses: NHSDigital/required-workflows/.github/workflows/dependabot-cleardown.yaml@JB-ENG-1655-dependabot-jira-automation
+    with:
+      # Scheduled runs write to Jira; manual runs honour the tickbox; push runs (temporary) are always dry
+      dry_run: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+    secrets:
+      JIRA_PAT: ${{ secrets.JIRA_PAT }}
