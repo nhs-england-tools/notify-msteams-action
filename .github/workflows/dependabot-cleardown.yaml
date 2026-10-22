@@ -11,12 +11,6 @@ on:
         description: "Dry run: look up Jira and log the ticket create/update without sending it"
         type: boolean
         default: false
-  # TEMPORARY: remove before merging - allows testing from the feature branch
-  push:
-    branches:
-      - JB-ENG-1655-dependabot-jira-automation
-    paths:
-      - .github/workflows/dependabot-cleardown.yaml
 
 permissions:
   pull-requests: read
@@ -34,7 +28,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      # Only the schedule and manual runs with dry_run unticked write to Jira; every other trigger is a dry run
+      # Only the schedule and manual runs with dry_run unticked write to Jira
       DRY_RUN: ${{ !(github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)) }}
     steps:
       - name: "Print open Dependabot pull requests"
