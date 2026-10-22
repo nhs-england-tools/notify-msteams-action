@@ -2,6 +2,11 @@ name: "List Open Dependabot Pull Requests and Alerts"
 
 on:
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: look up Jira and log the ticket create/update without sending it"
+        type: boolean
+        default: false
   # TEMPORARY: remove before merging - allows testing from the feature branch
   push:
     branches:
@@ -21,6 +26,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
+      # Only a manual run with dry_run unticked writes to Jira; every other trigger is a dry run
+      DRY_RUN: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run }}
     steps:
       - name: "Print open Dependabot pull requests"
         id: prs
@@ -140,6 +147,10 @@ jobs:
             exit 1
           fi
 
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "::notice::Dry run (${GITHUB_EVENT_NAME}): Jira will be read but no ticket will be created or updated"
+          fi
+
           repo_name=${GH_REPO#*/}
           summary="${repo_name} Dependabot cleardown"
 
@@ -189,6 +200,18 @@ jobs:
             fi
           }
 
+          # Write calls go through here so dry runs log the request instead of sending it
+          jira_write() {
+            local method=$1 path=$2
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "[DRY RUN] Would send: ${method} ${JIRA_BASE_URL}${path}"
+              echo "[DRY RUN] Payload:"
+              jq . <<< "$4"
+              return
+            fi
+            jira_api "$@"
+          }
+
           # De-duplicate: find an active ticket in the epic with exactly this summary.
           # Done-category and Cancelled tickets are excluded so a fresh ticket is raised once either is closed off.
           # (JQL "~" is a fuzzy text match, so the exact comparison is done with jq)
@@ -209,7 +232,7 @@ jobs:
             fi
             echo "Found existing ticket ${issue_key}; updating its description"
             update_payload=$(jq -n --arg description "$description" '{fields: {description: $description}}')
-            jira_api PUT "/rest/api/2/issue/${issue_key}" 204 "$update_payload"
+            jira_write PUT "/rest/api/2/issue/${issue_key}" 204 "$update_payload"
             action="Updated"
           else
             echo "No active '${summary}' ticket found in ${EPIC_KEY}; creating one"
@@ -228,16 +251,41 @@ jobs:
                   priority: { name: "Trivial" }
                 } + { ($epic_field): $epic_key })
               }')
-            jira_api POST /rest/api/2/issue 201 "$create_payload"
-            echo "Jira API response: ${JIRA_BODY}"
-            issue_key=$(jq -r '.key' <<< "$JIRA_BODY")
+            jira_write POST /rest/api/2/issue 201 "$create_payload"
             action="Created"
+            if [ "$DRY_RUN" != "true" ]; then
+              echo "Jira API response: ${JIRA_BODY}"
+              issue_key=$(jq -r '.key' <<< "$JIRA_BODY")
+            fi
           fi
 
-          echo "${action} Jira ticket ${issue_key}: ${JIRA_BASE_URL}/browse/${issue_key}"
-          {
-            echo
-            echo "## Jira ticket"
-            echo
-            echo "${action} [${issue_key}](${JIRA_BASE_URL}/browse/${issue_key}): ${summary}"
-          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$DRY_RUN" = "true" ]; then
+            if [ "$action" = "Updated" ]; then
+              result="Would update [${issue_key}](${JIRA_BASE_URL}/browse/${issue_key})"
+            else
+              result="Would create a new ticket in ${EPIC_KEY}"
+            fi
+            echo "[DRY RUN] ${result}: ${summary}"
+            {
+              echo
+              echo "## Jira ticket (dry run - no changes made)"
+              echo
+              echo "${result}: ${summary}"
+              echo
+              echo "<details><summary>Description that would be sent</summary>"
+              echo
+              echo '```text'
+              echo "$description"
+              echo '```'
+              echo
+              echo "</details>"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "${action} Jira ticket ${issue_key}: ${JIRA_BASE_URL}/browse/${issue_key}"
+            {
+              echo
+              echo "## Jira ticket"
+              echo
+              echo "${action} [${issue_key}](${JIRA_BASE_URL}/browse/${issue_key}): ${summary}"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
