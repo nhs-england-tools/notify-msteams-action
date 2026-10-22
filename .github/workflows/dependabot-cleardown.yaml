@@ -1,4 +1,4 @@
-name: "List Open Dependabot Pull Requests and Alerts"
+name: "Dependabot Cleardown"
 
 on:
   # Cron is UTC: 05:15 UK time in winter (GMT), 06:15 during British Summer Time.
@@ -16,15 +16,15 @@ on:
     branches:
       - JB-ENG-1655-dependabot-jira-automation
     paths:
-      - .github/workflows/list-open-prs.yaml
+      - .github/workflows/dependabot-cleardown.yaml
 
 permissions:
   pull-requests: read
   vulnerability-alerts: read
 
 jobs:
-  list-open-prs:
-    name: "List open Dependabot PRs and alerts"
+  dependabot-cleardown:
+    name: "Dependabot cleardown"
     runs-on: ubuntu-latest
     timeout-minutes: 5
     defaults:
