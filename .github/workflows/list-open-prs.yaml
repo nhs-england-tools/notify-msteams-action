@@ -27,6 +27,10 @@ jobs:
     name: "List open Dependabot PRs and alerts"
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    defaults:
+      run:
+        # Explicit bash adds pipefail, so a failed API call inside a pipeline fails the step
+        shell: bash
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
