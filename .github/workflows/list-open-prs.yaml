@@ -1,6 +1,10 @@
 name: "List Open Dependabot Pull Requests and Alerts"
 
 on:
+  # Cron is UTC: 05:15 UK time in winter (GMT), 06:15 during British Summer Time.
+  # Scheduled runs always use the default branch.
+  schedule:
+    - cron: "15 5 * * 1"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -26,8 +30,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      # Only a manual run with dry_run unticked writes to Jira; every other trigger is a dry run
-      DRY_RUN: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run }}
+      # Only the schedule and manual runs with dry_run unticked write to Jira; every other trigger is a dry run
+      DRY_RUN: ${{ !(github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)) }}
     steps:
       - name: "Print open Dependabot pull requests"
         id: prs
