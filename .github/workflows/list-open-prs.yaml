@@ -189,11 +189,12 @@ jobs:
             fi
           }
 
-          # De-duplicate: find an open ticket in the epic with exactly this summary
+          # De-duplicate: find an active ticket in the epic with exactly this summary.
+          # Done-category and Cancelled tickets are excluded so a fresh ticket is raised once either is closed off.
           # (JQL "~" is a fuzzy text match, so the exact comparison is done with jq)
           escaped_summary=${summary//\\/\\\\}
           escaped_summary=${escaped_summary//\"/\\\"}
-          jql="project = ENG AND \"Epic Link\" = ${EPIC_KEY} AND statusCategory != Done AND summary ~ \"\\\"${escaped_summary}\\\"\" ORDER BY created ASC"
+          jql="project = ENG AND \"Epic Link\" = ${EPIC_KEY} AND statusCategory != Done AND status not in (Cancelled) AND summary ~ \"\\\"${escaped_summary}\\\"\" ORDER BY created ASC"
           echo "Searching for an existing ticket: ${jql}"
           search_payload=$(jq -n --arg jql "$jql" '{jql: $jql, fields: ["summary", "status"], maxResults: 50}')
           jira_api POST /rest/api/2/search 200 "$search_payload"
@@ -204,14 +205,14 @@ jobs:
           if [ "${#match_keys[@]}" -gt 0 ]; then
             issue_key=${match_keys[0]}
             if [ "${#match_keys[@]}" -gt 1 ]; then
-              echo "::warning::Found ${#match_keys[@]} open '${summary}' tickets (${matches}); updating the oldest, ${issue_key}"
+              echo "::warning::Found ${#match_keys[@]} active '${summary}' tickets (${matches}); updating the oldest, ${issue_key}"
             fi
             echo "Found existing ticket ${issue_key}; updating its description"
             update_payload=$(jq -n --arg description "$description" '{fields: {description: $description}}')
             jira_api PUT "/rest/api/2/issue/${issue_key}" 204 "$update_payload"
             action="Updated"
           else
-            echo "No open '${summary}' ticket found in ${EPIC_KEY}; creating one"
+            echo "No active '${summary}' ticket found in ${EPIC_KEY}; creating one"
             create_payload=$(jq -n \
               --arg summary "$summary" \
               --arg description "$description" \
