@@ -24,7 +24,7 @@ permissions:
 jobs:
   dependabot-cleardown:
     # TEMPORARY: switch back to @main (or a SHA) before merging
-    uses: NHSDigital/required-workflows/.github/workflows/dependabot-cleardown.yaml@JB-ENG-1655-dependabot-jira-automation
+    uses: NHSDigital/dependabot-jira-action/.github/workflows/dependabot-cleardown.yaml@JB-ENG-1655-jira-automation
     with:
       # Scheduled runs write to Jira; manual runs honour the tickbox; push runs (temporary) are always dry
       dry_run: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
