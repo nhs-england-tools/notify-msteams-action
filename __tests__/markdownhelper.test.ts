@@ -31,3 +31,8 @@ test('test escaping markdown with double quote', async () => {
   const escapedString = escapeMarkdown(testString)
   expect(escapedString).toBe('This is a test &quot; string')
 })
+test('test escaping markdown keeps emoji and accented letters', async () => {
+  const testString = '🔴 Café build failed ✅'
+  const escapedString = escapeMarkdown(testString)
+  expect(escapedString).toBe(testString)
+})
