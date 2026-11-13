@@ -17,10 +17,20 @@ inputs:
     description: 'The content of the message to be displayed'
   message-colour:
     required: false
-    description: 'The colour to use for the header line in the notification'
+    description: 'The colour of the title: default, accent, good, warning or attention. Other values use default'
   link:
     required: false
     description: 'A link to include in the message'
+  link-title:
+    required: false
+    description: 'The text of the link button'
+    default: 'View'
+  facts:
+    required: false
+    description: 'Extra facts to show after the run details, one "Name: value" pair per line'
+  commit:
+    required: false
+    description: 'The commit SHA or tag whose author is shown, the commit that triggered the run by default'
 runs:
   using: 'node24'
   main: 'dist/index.js'

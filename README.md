@@ -12,6 +12,10 @@ This action uses typescript and is built from the [typescript-action](https://gi
   - [To work on this repository](#to-work-on-this-repository)
     - [Prerequisites](#prerequisites)
   - [Usage](#usage)
+    - [Versioning \& Release Process](#versioning--release-process)
+    - [Developer Guides Index](#developer-guides-index)
+    - [Contributing (Important Policy About `dist/`)](#contributing-important-policy-about-dist)
+    - [Conventional Commits](#conventional-commits)
   - [Contacts](#contacts)
   - [Licence](#licence)
 
@@ -69,8 +73,46 @@ The steps above detail how to quickly use this action within your repository. Th
 - teams-webhook-url - this is the URL provided by MS Teams when you configured the incoming webhook
 - message-title - the title for your message - this will be displayed in the notification
 - message-text - the text for your message - this will be displayed in the notification
-- message-colour - The colour to use for the header line in the notification
+- message-colour - optional, the colour of the title: `default`, `accent`,
+  `good`, `warning` or `attention`. Any other value, including a hex colour,
+  uses `default`
 - link - optional if required provide a link to be presented in the notification
+- link-title - optional, the text of the link button, `View` by default
+- facts - optional, extra facts to show after the run number, run ID and
+  branch, one `Name: value` pair per line. Lines without both parts are skipped
+- commit - optional, the commit SHA or tag whose author is shown, the commit
+  that triggered the run by default. When the author cannot be found, the
+  notification is still sent with a warning
+
+The branch fact of a pull request run shows its source and target branches,
+such as `feature/export → main`. A run triggered by a tag shows a `Tag` fact
+instead.
+
+For example, a failed deployment could use:
+
+```yml
+- name: Notify Teams
+  uses: nhs-england-tools/notify-msteams-action@v1
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    teams-webhook-url: ${{ secrets.TEAMS_WEBHOOK_URL }}
+    message-title: '🔴 Deployment failed'
+    message-text: '**production** was not updated. Check the failed job.'
+    message-colour: attention
+    link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    link-title: View the run
+    facts: |
+      Environment: production
+      Tag: v1.2.3
+```
+
+Text and facts keep emoji and other Unicode characters. Only `<`, `>`, `&`, `'`
+and `"` are escaped.
+
+Upgrading from 1.1.0 needs no workflow changes. The new inputs are optional
+and a hex message colour keeps the default title colour. When the commit
+author cannot be found, the action now warns and still sends the notification
+instead of failing the step.
 
 An example of how the notification could appear in Microsoft Teams is provided:
 

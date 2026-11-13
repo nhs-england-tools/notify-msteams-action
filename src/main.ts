@@ -1,8 +1,9 @@
-import * as github from '@actions/github'
 import * as core from '@actions/core'
+import * as github from '@actions/github'
 import axios from 'axios'
-import {buildMessageCard} from './messagecard'
 import {escapeMarkdown} from './markdownhelper'
+import {buildMessageCard, parseFacts} from './messagecard'
+import {branchName, commitAuthor, refTitle, serverUrl} from './runcontext'
 
 async function run(): Promise<void> {
   try {
@@ -13,28 +14,34 @@ async function run(): Promise<void> {
     const messageColour =
       core.getInput('message-colour', {required: false}) || '00cbff'
     const link = core.getInput('link', {required: false}) || ''
+    const linkTitle = core.getInput('link-title', {required: false}) || 'View'
+    const facts = parseFacts(core.getInput('facts', {required: false})).map(
+      fact => ({
+        title: escapeMarkdown(fact.title),
+        value: escapeMarkdown(fact.value)
+      })
+    )
 
     const [owner, repoName] = (process.env.GITHUB_REPOSITORY || '').split('/') // https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
-    const sha = process.env.GITHUB_SHA || ''
+    const commitRef =
+      core.getInput('commit', {required: false}) || process.env.GITHUB_SHA || ''
     const runNumber = process.env.GITHUB_RUN_NUMBER || ''
     const runId = process.env.GITHUB_RUN_ID || ''
-    const repoUrl = `https://github.com/${owner}/${repoName}`
-    const repoBranch = process.env.GITHUB_REF_NAME || ''
+    const repoUrl = `${serverUrl(process.env)}/${owner}/${repoName}`
+    const repoBranch = branchName(process.env)
 
     const octokit = github.getOctokit(githubToken)
-    const params = {owner, repo: repoName, ref: sha}
-    const commit = await octokit.rest.repos.getCommit(params)
-    const author = commit.data.author
-    let avatar_url = 'https://avatars.githubusercontent.com/u/105098969'
-    let login = 'Not provided'
-    let author_url = 'Not provided'
-    if (author) {
-      if (author.avatar_url) {
-        avatar_url = author.avatar_url
-      }
-      login = author.login
-      author_url = author.html_url
-    }
+    const author = await commitAuthor(
+      async () => {
+        const commit = await octokit.rest.repos.getCommit({
+          owner,
+          repo: repoName,
+          ref: commitRef
+        })
+        return commit.data.author
+      },
+      message => core.warning(message)
+    )
 
     const messageCard = buildMessageCard(
       escapeMarkdown(messageTitle),
@@ -44,11 +51,14 @@ async function run(): Promise<void> {
       runId,
       repoName,
       repoUrl,
-      repoBranch,
-      avatar_url,
-      login,
-      author_url,
-      link
+      escapeMarkdown(repoBranch),
+      author.avatarUrl,
+      author.login,
+      author.url,
+      link,
+      facts,
+      escapeMarkdown(linkTitle),
+      refTitle(process.env)
     )
 
     const response = await axios.post(teamsWebhookUrl, messageCard, {
