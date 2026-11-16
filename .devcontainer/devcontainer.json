@@ -37,12 +37,15 @@
     "source=${env:HOME}${env:USERPROFILE}/.aws,target=/home/node/.aws,type=bind",
     "source=${localEnv:HOME}/.ssh,target=/home/node/.ssh,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.gnupg,target=/home/node/.gnupg,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.bash_aliases,target=/home/node/.bash_aliases,type=bind,readonly"
+    "source=${localEnv:HOME}/.bash_aliases,target=/home/node/.bash_aliases,type=bind,readonly",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.eng-central,target=/opt/eng-central,type=bind,readonly"
   ],
   "initializeCommand": {
     "alias": "bash -c 'touch ~/.bash_aliases'",
+    "engCentral": "bash -c 'mkdir -p ~/.eng-central'",
     "env": "bash -c 'printf \"HOST_UID=$(id -u)\\nHOST_GID=$(id -g)\\n\" > .devcontainer/host.env'"
   },
   "postCreateCommand": "bash -c '.devcontainer/create.sh'",
+  "postStartCommand": "bash -c '[ -x /opt/eng-central/scripts/setup.sh ] && /opt/eng-central/scripts/setup.sh --no-hooks --quiet || true'",
   "remoteUser": "node"
 }
