@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/nhs-england-tools/notify-msteams-action/compare/v1.1.0...v1.2.0) (2026-11-17)
+
+
+### Features
+
+* **action:** enrich Teams notification cards ([#387](https://github.com/nhs-england-tools/notify-msteams-action/issues/387)) ([053c5db](https://github.com/nhs-england-tools/notify-msteams-action/commit/053c5db871fab9ce58d4799a85af22e821c71d9f))
+
 # [1.1.0](https://github.com/nhs-england-tools/notify-msteams-action/compare/v1.0.7...v1.1.0) (2026-09-24)
 
 
