@@ -27,7 +27,7 @@ jobs:
   metadata:
     name: 'Set CI/CD metadata'
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 5
     needs: [guard-dist]
     permissions:
       contents: read
