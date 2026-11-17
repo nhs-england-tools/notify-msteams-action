@@ -109,11 +109,6 @@ For example, a failed deployment could use:
 Text and facts keep emoji and other Unicode characters. Only `<`, `>`, `&`, `'`
 and `"` are escaped.
 
-Upgrading from 1.1.0 needs no workflow changes. The new inputs are optional
-and a hex message colour keeps the default title colour. When the commit
-author cannot be found, the action now warns and still sends the notification
-instead of failing the step.
-
 An example of how the notification could appear in Microsoft Teams is provided:
 
 ![Microsoft Teams notification showing the adaptive card being displayed to the user for a "Pull request opened" event](docs/images/msteams-action-notification.png)
