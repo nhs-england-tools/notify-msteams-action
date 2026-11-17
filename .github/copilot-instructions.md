@@ -10,7 +10,7 @@ Purpose: GitHub Composite + TypeScript Action that posts Adaptive Card style not
 
 ## Action Contract (Do NOT silently break)
 
-Inputs (see `action.yml`): github-token, teams-webhook-url, message-title, message-text, message-colour (optional, default handled in code), link (optional). Runtime: `node16` (legacy). If upgrading runtime (e.g. node20) also adjust build & test workflows and confirm no ESM interoperability regressions.
+Inputs (see `action.yml`): github-token, teams-webhook-url, message-title, message-text, message-colour (optional, default handled in code), link (optional), link-title (optional), facts (optional), commit (optional). Runtime: `node24`. If changing the runtime, also adjust build & test workflows and confirm no ESM interoperability regressions.
 Output: none (side-effect only: HTTP POST). Maintain JSON structure: top-level `{ type: 'message', attachments: [ { contentType: 'application/vnd.microsoft.card.adaptive', content: AdaptiveCard } ] }`.
 
 ## Build & Packaging
@@ -41,13 +41,14 @@ Four staged reusable workflows (commit, test, build, acceptance) orchestrated by
 - Commit stage: formatting, English usage, secret / dependency scans, Terraform lint, LOC report.
 - Test stage: unit tests, lint, coverage, static analysis (Sonar) + an end-to-end invocation of the action (ensures dist build + webhook send path).
 - Build stage: installs deps, builds, uploads `dist/` artefact.
-If altering build semantics ensure corresponding stage Make targets still satisfy expectations (e.g. keep `make build` producing fresh `dist/`).
+  If altering build semantics ensure corresponding stage Make targets still satisfy expectations (e.g. keep `make build` producing fresh `dist/`).
 
 ## Conventions & Patterns
 
 - Always escape all dynamic card text with `escapeMarkdown` before embedding.
 - Optional link: if empty string, `actions` array must be `[]`. Preserve that logic; tests assert it.
-- Default message colour fallback is hard-coded `'00cbff'` (not currently applied inside adaptive card body—future enhancement may use). If you implement colour usage, add tests and keep backward compatibility with existing inputs.
+- Default message colour fallback is hard-coded `'00cbff'`. `titleColour` maps the input to an Adaptive Card text colour for the title, and any value that is not a named colour, including that hex default, maps to `default`. Keep that fallback so existing callers render as before.
+- Keep new inputs optional and new `buildMessageCard` parameters optional and last, so upgrading needs no caller changes.
 - Use Octokit only in `main.ts`; keep card construction pure (facilitates unit testing).
 - Keep adaptive card schema version pinned (`1.4`). If updating, verify Teams compatibility.
 
@@ -61,7 +62,7 @@ If altering build semantics ensure corresponding stage Make targets still satisf
 1. Add / update unit tests first (mirroring existing pattern of JSON parse + field assertions).
 2. Run: `npm test` then `npm run lint` then `npm run package` to regenerate dist.
 3. If publishing, commit updated `dist/index.js` (`@vercel/ncc` bundle) and tag a release (semantic-release pipeline handles versioning on main).
-4. Maintain Node 16 compatibility until workflows updated (check `runs.using`).
+4. Keep the `runs.using` runtime in `action.yml` and the workflow `node-version` in step.
 
 ## Do Not
 
